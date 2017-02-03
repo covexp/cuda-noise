@@ -58,7 +58,7 @@ __device__ float checker(float x, float y, float z, float scale)
 
 __device__ float rn(int x, int y, int z)
 {
-	return getRandomValue(x * 231 + y * 91023 + z * 48172);
+	return hash((unsigned int)(x * 1723 + y * 93241 + z * 149812 + 3824));
 }
 
 __device__ float3 vectorNoise(int x, int y, int z)
@@ -117,11 +117,6 @@ __device__ float grad(int hash, float x, float y, float z)
 	case 0xF: return -y - z;
 	default: return 0; // never happens
 	}
-}
-
-__device__ int getHash(int x, int y, int z)
-{
-	return hash((unsigned int)(x * 1723 + y * 93241 + z * 149812 + 3824));
 }
 
 __device__ float fade(float t)
@@ -272,14 +267,14 @@ __device__ float perlinNoise(float3 pos)
 	float w = fade(pos.z);
 
 	// influence values
-	float i000 = grad(getHash(ix, iy, iz), pos.x, pos.y, pos.z);
-	float i100 = grad(getHash(ix + 1, iy, iz), pos.x - 1.0f, pos.y, pos.z);
-	float i010 = grad(getHash(ix, iy + 1, iz), pos.x, pos.y - 1.0f, pos.z);
-	float i110 = grad(getHash(ix + 1, iy + 1, iz), pos.x - 1.0f, pos.y - 1.0f, pos.z);
-	float i001 = grad(getHash(ix, iy, iz + 1), pos.x, pos.y, pos.z - 1.0f);
-	float i101 = grad(getHash(ix + 1, iy, iz + 1), pos.x - 1.0f, pos.y, pos.z - 1.0f);
-	float i011 = grad(getHash(ix, iy + 1, iz + 1), pos.x, pos.y - 1.0f, pos.z - 1.0f);
-	float i111 = grad(getHash(ix + 1, iy + 1, iz + 1), pos.x - 1.0f, pos.y - 1.0f, pos.z - 1.0f);
+	float i000 = grad(rn(ix, iy, iz), pos.x, pos.y, pos.z);
+	float i100 = grad(rn(ix + 1, iy, iz), pos.x - 1.0f, pos.y, pos.z);
+	float i010 = grad(rn(ix, iy + 1, iz), pos.x, pos.y - 1.0f, pos.z);
+	float i110 = grad(rn(ix + 1, iy + 1, iz), pos.x - 1.0f, pos.y - 1.0f, pos.z);
+	float i001 = grad(rn(ix, iy, iz + 1), pos.x, pos.y, pos.z - 1.0f);
+	float i101 = grad(rn(ix + 1, iy, iz + 1), pos.x - 1.0f, pos.y, pos.z - 1.0f);
+	float i011 = grad(rn(ix, iy + 1, iz + 1), pos.x, pos.y - 1.0f, pos.z - 1.0f);
+	float i111 = grad(rn(ix + 1, iy + 1, iz + 1), pos.x - 1.0f, pos.y - 1.0f, pos.z - 1.0f);
 
 	// interpolation
 	float x00 = lerp(i000, i100, u);

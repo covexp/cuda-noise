@@ -1,3 +1,7 @@
+// textureViewer
+// Simple GL texture viewer to preview 2D slices of textures produced
+// by cuda noise.
+
 #define GL_GLEXT_PROTOTYPES
 #include <glut.h>
 #include <glext.h>
@@ -39,17 +43,17 @@ __global__ void kernel(uchar4 *ptr, float zoomFactor, int samples = 4)
 
 		float3 ditheredPos = make_float3(pos.x + dx, pos.y + dy, pos.z + dz);
 
-		//	float val = checker(fx, fy, 0.0f, 64.0f);
-		//	float val = discreteNoise(fx, fy, 0.0f, zoomFactor);
+//		float val = checker(fx, fy, 0.0f, 64.0f);
+//		float val = discreteNoise(fx, fy, 0.0f, zoomFactor);
 //		float val = linearValue(ditheredPos, 1.0f);
-		//	float val = perlinNoise(ditheredPos);
-//			float val = repeater(ditheredPos, 6, 2.0f, 0.5f, CUDANOISE_LINEARVALUE);
-//			float val = turbulence(ditheredPos, 50.5f);
+//		float val = perlinNoise(ditheredPos);
+		float val = repeater(ditheredPos, 6, 2.0f, 0.5f, CUDANOISE_CUBICVALUE);
+//		float val = turbulence(ditheredPos, 50.5f);
 //		float val = repeaterTurbulence(ditheredPos, 50.5f, 16);
 //		float val = recursiveTurbulence(ditheredPos, 3, 2.0f, 0.5f, 1.0f);
 //		float val = recursiveRepeaterTurbulence(ditheredPos, 4, 8, 2.0f, 0.5f, 1.0f);
 //		float val = cubicValue(ditheredPos, 1.0f);
-		float val = fadedValue(ditheredPos, 1.0f);
+//		float val = fadedValue(ditheredPos, 1.0f);
 
 		acc += val;
 	}
