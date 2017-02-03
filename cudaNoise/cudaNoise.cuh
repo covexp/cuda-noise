@@ -28,6 +28,7 @@ __device__ float checker(float x, float y, float z, float scale);
 __device__ float discreteNoise(float x, float y, float z, float scale);
 __device__ float cubicValue(float3 pos, float scale);
 __device__ float linearValue(float3 pos, float scale);
+__device__ float fadedValue(float3 pos, float scale);
 __device__ float perlinNoise(float3 pos);
 __device__ float repeater(float3 pos, int n, float harmonic, float decay, basisFunction basis);
 __device__ float turbulence(float3 pos, float strength);

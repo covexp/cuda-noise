@@ -48,7 +48,8 @@ __global__ void kernel(uchar4 *ptr, float zoomFactor, int samples = 4)
 //		float val = repeaterTurbulence(ditheredPos, 50.5f, 16);
 //		float val = recursiveTurbulence(ditheredPos, 3, 2.0f, 0.5f, 1.0f);
 //		float val = recursiveRepeaterTurbulence(ditheredPos, 4, 8, 2.0f, 0.5f, 1.0f);
-		float val = cubicValue(ditheredPos, 1.0f);
+//		float val = cubicValue(ditheredPos, 1.0f);
+		float val = fadedValue(ditheredPos, 1.0f);
 
 		acc += val;
 	}

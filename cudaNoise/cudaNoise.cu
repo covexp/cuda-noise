@@ -83,6 +83,8 @@ __device__ float dotProduct(float3 u, float3 v)
 	return (u.x * v.x + u.y * v.y + u.z * v.z);
 }
 
+// Helper functions for noise noise
+
 __device__ float lerp(float a, float b, float ratio)
 {
 	return a * (1.0f - ratio) + b * ratio;
@@ -92,6 +94,45 @@ __device__ float cubic(float p0, float p1, float p2, float p3, float x)
 {
 	return p1 + 0.5 * x * (p2 - p0 + x * (2.0 * p0 - 5.0 * p1 + 4.0 * p2 - p3 + x * (3.0 * (p1 - p2) + p3 - p0)));
 }
+
+__device__ float grad(int hash, float x, float y, float z)
+{
+	switch (hash & 0xF)
+	{
+	case 0x0: return  x + y;
+	case 0x1: return -x + y;
+	case 0x2: return  x - y;
+	case 0x3: return -x - y;
+	case 0x4: return  x + z;
+	case 0x5: return -x + z;
+	case 0x6: return  x - z;
+	case 0x7: return -x - z;
+	case 0x8: return  y + z;
+	case 0x9: return -y + z;
+	case 0xA: return  y - z;
+	case 0xB: return -y - z;
+	case 0xC: return  y + x;
+	case 0xD: return -y + z;
+	case 0xE: return  y - x;
+	case 0xF: return -y - z;
+	default: return 0; // never happens
+	}
+}
+
+__device__ int getHash(int x, int y, int z)
+{
+	return hash((unsigned int)(x * 1723 + y * 93241 + z * 149812 + 3824));
+}
+
+__device__ float fade(float t)
+{
+	// Fade function as defined by Ken Perlin.  This eases coordinate values
+	// so that they will ease towards integral values.  This ends up smoothing
+	// the final output.
+	return t * t * t * (t * (t * 6.0f - 15.0f) + 10.0f);         // 6t^5 - 15t^4 + 10t^3
+}
+
+// Noise functions
 
 __device__ float tricubic(int x, int y, int z, float u, float v, float w)
 {
@@ -136,19 +177,6 @@ __device__ float discreteNoise(float x, float y, float z, float scale)
 	return rn(ix, iy, iz);
 }
 
-__device__ float cubicValue(float3 pos, float scale = 1.0f)
-{
-	int ix = (int)(pos.x * scale);
-	int iy = (int)(pos.y * scale);
-	int iz = (int)(pos.z * scale);
-
-	float u = pos.x - ix;
-	float v = pos.y - iy;
-	float w = pos.z - iz;
-
-	return tricubic(ix, iy, iz, u, v, w);
-}
-
 __device__ float linearValue(float3 pos, float scale = 1.0f)
 {
 	int ix = (int)(pos.x * scale);
@@ -181,41 +209,49 @@ __device__ float linearValue(float3 pos, float scale = 1.0f)
 	return lerp(y0, y1, w) / 2.0f * 1.0f;
 }
 
-__device__ float grad(int hash, float x, float y, float z)
+__device__ float fadedValue(float3 pos, float scale = 1.0f)
 {
-	switch (hash & 0xF)
-	{
-		case 0x0: return  x + y;
-		case 0x1: return -x + y;
-		case 0x2: return  x - y;
-		case 0x3: return -x - y;
-		case 0x4: return  x + z;
-		case 0x5: return -x + z;
-		case 0x6: return  x - z;
-		case 0x7: return -x - z;
-		case 0x8: return  y + z;
-		case 0x9: return -y + z;
-		case 0xA: return  y - z;
-		case 0xB: return -y - z;
-		case 0xC: return  y + x;
-		case 0xD: return -y + z;
-		case 0xE: return  y - x;
-		case 0xF: return -y - z;
-	default: return 0; // never happens
-	}
+	int ix = (int)(pos.x * scale);
+	int iy = (int)(pos.y * scale);
+	int iz = (int)(pos.z * scale);
+
+	float u = fade(pos.x - ix);
+	float v = fade(pos.y - iy);
+	float w = fade(pos.z - iz);
+
+	// Corner values
+	float a000 = rn(ix, iy, iz);
+	float a100 = rn(ix + 1, iy, iz);
+	float a010 = rn(ix, iy + 1, iz);
+	float a110 = rn(ix + 1, iy + 1, iz);
+	float a001 = rn(ix, iy, iz + 1);
+	float a101 = rn(ix + 1, iy, iz + 1);
+	float a011 = rn(ix, iy + 1, iz + 1);
+	float a111 = rn(ix + 1, iy + 1, iz + 1);
+
+	// Linear interpolation
+	float x00 = lerp(a000, a100, u);
+	float x10 = lerp(a010, a110, u);
+	float x01 = lerp(a001, a101, u);
+	float x11 = lerp(a011, a111, u);
+
+	float y0 = lerp(x00, x10, v);
+	float y1 = lerp(x01, x11, v);
+
+	return lerp(y0, y1, w) / 2.0f * 1.0f;
 }
 
-__device__ int getHash(int x, int y, int z)
+__device__ float cubicValue(float3 pos, float scale = 1.0f)
 {
-	return hash((unsigned int)(x * 1723 + y * 93241 + z * 149812 + 3824));
-}
+	int ix = (int)(pos.x * scale);
+	int iy = (int)(pos.y * scale);
+	int iz = (int)(pos.z * scale);
 
-__device__ float fade(float t) 
-{
-	// Fade function as defined by Ken Perlin.  This eases coordinate values
-	// so that they will ease towards integral values.  This ends up smoothing
-	// the final output.
-	return t * t * t * (t * (t * 6.0f - 15.0f) + 10.0f);         // 6t^5 - 15t^4 + 10t^3
+	float u = pos.x - ix;
+	float v = pos.y - iy;
+	float w = pos.z - iz;
+
+	return tricubic(ix, iy, iz, u, v, w);
 }
 
 __device__ float perlinNoise(float3 pos)
