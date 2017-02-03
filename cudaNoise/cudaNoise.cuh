@@ -1,7 +1,12 @@
 #ifndef cudanoise_cuh
 #define cudanoise_cuh
 
-typedef enum { CUDANOISE_LINEARVALUE, CUDANOISE_CUBICVALUE, CUDANOISE_PERLIN } basisFunction;
+// Basis functions
+typedef enum { CUDANOISE_LINEARVALUE, 
+			   CUDANOISE_FADEDVALUE,
+			   CUDANOISE_CUBICVALUE,
+			   CUDANOISE_PERLIN 
+			 } basisFunction;
 
 // Utility functions
 __device__ unsigned int hash(unsigned int a);
@@ -16,12 +21,10 @@ __device__ float3 scaleVector(float3 v, float factor);
 __device__ float3 addVectors(float3 v, float3 w);
 __device__ float dotProduct(float3 u, float3 v);
 
-__device__ float cubic(float p0, float p1, float p2, float p3, float x);
-
-__device__ float tricubic(int x, int y, int z, float u, float v, float w);
-
 // Helper functions for noise
 __device__ float grad(int hash, float x, float y, float z);
+__device__ float cubic(float p0, float p1, float p2, float p3, float x);
+__device__ float tricubic(int x, int y, int z, float u, float v, float w);
 
 // Noise functions
 __device__ float checker(float x, float y, float z, float scale);
@@ -34,7 +37,6 @@ __device__ float repeater(float3 pos, int n, float harmonic, float decay, basisF
 __device__ float turbulence(float3 pos, float strength);
 __device__ float repeaterTurbulence(float3 pos, float strength, int n);
 __device__ float recursiveTurbulence(float3 pos, int n, float harmonic, float decay, float strength);
-
 __device__ float recursiveRepeaterTurbulence(float3 pos, int n, int m, float harmonic, float decay, float strength);
 
 #endif

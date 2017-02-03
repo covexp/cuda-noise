@@ -303,6 +303,9 @@ __device__ float repeater(float3 pos, int n, float harmonic = 2.0f, float decay 
 		case(CUDANOISE_LINEARVALUE):
 			acc += linearValue(make_float3(pos.x * scale, pos.y * scale, pos.z * scale)) * amp;
 			break;
+		case(CUDANOISE_FADEDVALUE):
+			acc += fadedValue(make_float3(pos.x * scale, pos.y * scale, pos.z * scale)) * amp;
+			break;
 		case(CUDANOISE_CUBICVALUE):
 			acc += cubicValue(make_float3(pos.x * scale, pos.y * scale, pos.z * scale)) * amp;
 			break;
