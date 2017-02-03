@@ -12,7 +12,7 @@
 uchar4 *devPtr;
 dim3 blocks(DIM / 16, DIM / 16);
 dim3 threads(16, 16);
-float zoom = 1.0f;
+float zoom = 16.0f;
 
 GLuint bufferObj;
 cudaGraphicsResource *resource;
@@ -41,12 +41,14 @@ __global__ void kernel(uchar4 *ptr, float zoomFactor, int samples = 4)
 
 		//	float val = checker(fx, fy, 0.0f, 64.0f);
 		//	float val = discreteNoise(fx, fy, 0.0f, zoomFactor);
+//		float val = linearValue(ditheredPos, 1.0f);
 		//	float val = perlinNoise(ditheredPos);
-		//	float val = repeater(ditheredPos, 1, 2.0f, 0.5f);
+//			float val = repeater(ditheredPos, 6, 2.0f, 0.5f, CUDANOISE_LINEARVALUE);
 //			float val = turbulence(ditheredPos, 50.5f);
-		float val = repeaterTurbulence(ditheredPos, 50.5f, 16);
+//		float val = repeaterTurbulence(ditheredPos, 50.5f, 16);
 //		float val = recursiveTurbulence(ditheredPos, 3, 2.0f, 0.5f, 1.0f);
 //		float val = recursiveRepeaterTurbulence(ditheredPos, 4, 8, 2.0f, 0.5f, 1.0f);
+		float val = cubicValue(ditheredPos, 1.0f);
 
 		acc += val;
 	}
