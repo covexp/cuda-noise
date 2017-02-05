@@ -1,13 +1,15 @@
 // textureViewer
 // Simple GL texture viewer to preview 2D slices of textures produced
-// by cuda noise.
+// by cuda noise
 
 #define GL_GLEXT_PROTOTYPES
 #include <glut.h>
 #include <glext.h>
 #include <cuda.h>
 #include <cuda_gl_interop.h>
+
 #include <iostream>
+#include <time.h>
 
 #include "cudanoise.cuh"
 
@@ -16,19 +18,21 @@
 uchar4 *devPtr;
 dim3 blocks(DIM / 16, DIM / 16);
 dim3 threads(16, 16);
+
 float zoom = 16.0f;
+int genSeed = 42;
 
 GLuint bufferObj;
 cudaGraphicsResource *resource;
 
-__global__ void kernel(uchar4 *ptr, float zoomFactor, int samples = 4)
+__global__ void kernel(uchar4 *ptr, float zoomFactor, int samples, int seed)
 {
 	int x = threadIdx.x + blockIdx.x * blockDim.x;
 	int y = threadIdx.y + blockIdx.y * blockDim.y;
 	int offset = x + y * blockDim.x * gridDim.x;
 
-	float fx = x / (float)DIM + 24.234f;
-	float fy = y / (float)DIM + 92.324f;
+	float fx = x / (float)DIM;
+	float fy = y / (float)DIM;
 
 	float3 pos = make_float3(fx, fy, 0.0f);
 	pos = scaleVector(pos, zoomFactor);
@@ -37,17 +41,17 @@ __global__ void kernel(uchar4 *ptr, float zoomFactor, int samples = 4)
 
 	for (int i = 0; i < samples; i++)
 	{
-		float dx = getRandomValue(327482 + i * 2347)  / (float)DIM * zoomFactor - 0.5f;
-		float dy = getRandomValue(912472 + i * 118438)  / (float)DIM * zoomFactor - 0.5f;
-		float dz = getRandomValue(112348 + i * 68214)  / (float)DIM * zoomFactor - 0.5f;
+		float dx = getRandomValue(327482 + i * 2347 + seed)  / (float)DIM * zoomFactor - 0.5f;
+		float dy = getRandomValue(912472 + i * 118438 + seed)  / (float)DIM * zoomFactor - 0.5f;
+		float dz = getRandomValue(112348 + i * 68214 + seed)  / (float)DIM * zoomFactor - 0.5f;
 
 		float3 ditheredPos = make_float3(pos.x + dx, pos.y + dy, pos.z + dz);
 
 //		float val = checker(fx, fy, 0.0f, 64.0f);
 //		float val = discreteNoise(fx, fy, 0.0f, zoomFactor);
-//		float val = linearValue(ditheredPos, 1.0f);
-//		float val = perlinNoise(ditheredPos);
-		float val = repeater(ditheredPos, 6, 2.0f, 0.5f, CUDANOISE_CUBICVALUE);
+		float val = linearValue(ditheredPos, 1.0f, seed);
+//		float val = perlinNoise(ditheredPos, 1.0f, seed);
+//		float val = repeater(ditheredPos, 6, 2.0f, 0.5f, CUDANOISE_PERLIN);
 //		float val = turbulence(ditheredPos, 50.5f);
 //		float val = repeaterTurbulence(ditheredPos, 50.5f, 16);
 //		float val = recursiveTurbulence(ditheredPos, 3, 2.0f, 0.5f, 1.0f);
@@ -57,6 +61,7 @@ __global__ void kernel(uchar4 *ptr, float zoomFactor, int samples = 4)
 
 		acc += val;
 	}
+
 
 	acc /= (float)samples;
 
@@ -71,6 +76,24 @@ __global__ void kernel(uchar4 *ptr, float zoomFactor, int samples = 4)
 	ptr[offset].w = 255;
 }
 
+void setSeed(int newSeed)
+{
+	genSeed = newSeed;
+}
+
+void redrawTexture()
+{
+	cudaGraphicsMapResources(1, &resource, NULL);
+	kernel << < blocks, threads >> > (devPtr, zoom *= 1.0001f, 1, genSeed);
+	cudaGraphicsUnmapResources(1, &resource, NULL);
+
+	glutPostRedisplay();
+}
+
+static void idle_func(void)
+{
+}
+
 static void draw_func(void)
 {
 	glDrawPixels(DIM, DIM, GL_RGBA, GL_UNSIGNED_BYTE, 0);
@@ -81,15 +104,30 @@ static void key_func(unsigned char key, int x, int y)
 {
 	switch (key)
 	{
+	// ESC to exit
 	case 27:
 		cudaGraphicsUnregisterResource(resource);
 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
 		glDeleteBuffers(1, &bufferObj);
 		exit(0);
+		break; // because fu
+	// Plus to zoom in
 	case 43:
-		std::cout << "Zoom requested." << std::endl;
+		zoom *= 0.5f;
+		redrawTexture();
 		break;
-
+	// Minus to zoom out
+	case 45:
+		zoom *= 2.0f;
+		redrawTexture();
+		break;
+	// Spacebar to get new seed
+	case 32:
+		clock_t t = clock();
+		unsigned int newSeed = (unsigned int)((double)t * 1000.0f);
+		setSeed(newSeed);
+		redrawTexture();
+		break;
 	}
 }
 
@@ -97,6 +135,8 @@ int main(int argc, char **argv)
 {
 	cudaDeviceProp prop;
 	int dev;
+
+	setSeed(time(NULL));
 
 	memset(&prop, 0, sizeof(cudaDeviceProp));
 	prop.major = 1;
@@ -120,10 +160,11 @@ int main(int argc, char **argv)
 	cudaGraphicsMapResources(1, &resource, NULL);
 	cudaGraphicsResourceGetMappedPointer((void**)&devPtr, &size, resource);
 
-	kernel << <blocks, threads >> > (devPtr, zoom);
+	kernel << <blocks, threads >> > (devPtr, zoom, 1, genSeed);
 
 	cudaGraphicsUnmapResources(1, &resource, NULL);
 
+	glutIdleFunc(idle_func);
 	glutKeyboardFunc(key_func);
 	glutDisplayFunc(draw_func);
 	glutMainLoop();

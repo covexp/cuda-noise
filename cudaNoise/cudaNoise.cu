@@ -9,6 +9,8 @@
 
 __device__ unsigned int hash(unsigned int a)
 {
+//	a += *genSeed;
+
 	a = (a + 0x7ed55d16) + (a << 12);
 	a = (a ^ 0xc761c23c) ^ (a >> 19);
 	a = (a + 0x165667b1) + (a << 5);
@@ -56,9 +58,9 @@ __device__ float checker(float x, float y, float z, float scale)
 	return 0.0f;
 }
 
-__device__ float rn(int x, int y, int z)
+__device__ float rn(int x, int y, int z, int seed = 0)
 {
-	return hash((unsigned int)(x * 1723 + y * 93241 + z * 149812 + 3824));
+	return mapToSigned(getRandomValue((unsigned int)(x * 1723 + y * 93241 + z * 149812 + 3824 + seed)));
 }
 
 __device__ float3 vectorNoise(int x, int y, int z)
@@ -172,25 +174,25 @@ __device__ float discreteNoise(float x, float y, float z, float scale)
 	return rn(ix, iy, iz);
 }
 
-__device__ float linearValue(float3 pos, float scale = 1.0f)
+__device__ float linearValue(float3 pos, float scale = 1.0f, int seed = 0)
 {
-	int ix = (int)(pos.x * scale);
-	int iy = (int)(pos.y * scale);
-	int iz = (int)(pos.z * scale);
+	int ix = (int)pos.x;
+	int iy = (int)pos.y;
+	int iz = (int)pos.z;
 
 	float u = pos.x - ix;
 	float v = pos.y - iy;
 	float w = pos.z - iz;
 
 	// Corner values
-	float a000 = rn(ix, iy, iz);
-	float a100 = rn(ix + 1, iy, iz);
-	float a010 = rn(ix, iy + 1, iz);
-	float a110 = rn(ix + 1, iy + 1, iz);
-	float a001 = rn(ix, iy, iz + 1);
-	float a101 = rn(ix + 1, iy, iz + 1);
-	float a011 = rn(ix, iy + 1, iz + 1);
-	float a111 = rn(ix + 1, iy + 1, iz + 1);
+	float a000 = rn(ix, iy, iz, seed);
+	float a100 = rn(ix + 1, iy, iz, seed);
+	float a010 = rn(ix, iy + 1, iz, seed);
+	float a110 = rn(ix + 1, iy + 1, iz, seed);
+	float a001 = rn(ix, iy, iz + 1, seed);
+	float a101 = rn(ix + 1, iy, iz + 1, seed);
+	float a011 = rn(ix, iy + 1, iz + 1, seed);
+	float a111 = rn(ix + 1, iy + 1, iz + 1, seed);
 
 	// Linear interpolation
 	float x00 = lerp(a000, a100, u);
@@ -201,7 +203,7 @@ __device__ float linearValue(float3 pos, float scale = 1.0f)
 	float y0 = lerp(x00, x10, v);
 	float y1 = lerp(x01, x11, v);
 
-	return lerp(y0, y1, w) / 2.0f * 1.0f;
+	return lerp(y0, y1, w);
 }
 
 __device__ float fadedValue(float3 pos, float scale = 1.0f)
@@ -249,7 +251,7 @@ __device__ float cubicValue(float3 pos, float scale = 1.0f)
 	return tricubic(ix, iy, iz, u, v, w);
 }
 
-__device__ float perlinNoise(float3 pos)
+__device__ float perlinNoise(float3 pos, float scale = 1.0f, int seed = 0)
 {
 	// zero corner integer position
 	int ix = (int)floorf(pos.x);
@@ -267,14 +269,14 @@ __device__ float perlinNoise(float3 pos)
 	float w = fade(pos.z);
 
 	// influence values
-	float i000 = grad(rn(ix, iy, iz), pos.x, pos.y, pos.z);
-	float i100 = grad(rn(ix + 1, iy, iz), pos.x - 1.0f, pos.y, pos.z);
-	float i010 = grad(rn(ix, iy + 1, iz), pos.x, pos.y - 1.0f, pos.z);
-	float i110 = grad(rn(ix + 1, iy + 1, iz), pos.x - 1.0f, pos.y - 1.0f, pos.z);
-	float i001 = grad(rn(ix, iy, iz + 1), pos.x, pos.y, pos.z - 1.0f);
-	float i101 = grad(rn(ix + 1, iy, iz + 1), pos.x - 1.0f, pos.y, pos.z - 1.0f);
-	float i011 = grad(rn(ix, iy + 1, iz + 1), pos.x, pos.y - 1.0f, pos.z - 1.0f);
-	float i111 = grad(rn(ix + 1, iy + 1, iz + 1), pos.x - 1.0f, pos.y - 1.0f, pos.z - 1.0f);
+	float i000 = grad(rn(ix, iy, iz, seed), pos.x, pos.y, pos.z);
+	float i100 = grad(rn(ix + 1, iy, iz, seed), pos.x - 1.0f, pos.y, pos.z);
+	float i010 = grad(rn(ix, iy + 1, iz, seed), pos.x, pos.y - 1.0f, pos.z);
+	float i110 = grad(rn(ix + 1, iy + 1, iz, seed), pos.x - 1.0f, pos.y - 1.0f, pos.z);
+	float i001 = grad(rn(ix, iy, iz + 1, seed), pos.x, pos.y, pos.z - 1.0f);
+	float i101 = grad(rn(ix + 1, iy, iz + 1, seed), pos.x - 1.0f, pos.y, pos.z - 1.0f);
+	float i011 = grad(rn(ix, iy + 1, iz + 1, seed), pos.x, pos.y - 1.0f, pos.z - 1.0f);
+	float i111 = grad(rn(ix + 1, iy + 1, iz + 1, seed), pos.x - 1.0f, pos.y - 1.0f, pos.z - 1.0f);
 
 	// interpolation
 	float x00 = lerp(i000, i100, u);
