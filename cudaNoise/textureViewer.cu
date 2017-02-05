@@ -48,14 +48,13 @@ __global__ void kernel(uchar4 *ptr, float zoomFactor, int samples, int seed)
 		float3 ditheredPos = make_float3(pos.x + dx, pos.y + dy, pos.z + dz);
 
 //		float val = checker(fx, fy, 0.0f, 64.0f);
-//		float val = discreteNoise(fx, fy, 0.0f, zoomFactor);
-		float val = linearValue(ditheredPos, 1.0f, seed);
+//		float val = discreteNoise(ditheredPos, 1.0f, seed);
+//		float val = linearValue(ditheredPos, 1.0f, seed);
 //		float val = perlinNoise(ditheredPos, 1.0f, seed);
-//		float val = repeater(ditheredPos, 6, 2.0f, 0.5f, CUDANOISE_PERLIN);
+		float val = repeater(ditheredPos, 1.0f, seed, 2, 2.0f, 0.5f, CUDANOISE_PERLIN);
 //		float val = turbulence(ditheredPos, 50.5f);
 //		float val = repeaterTurbulence(ditheredPos, 50.5f, 16);
 //		float val = recursiveTurbulence(ditheredPos, 3, 2.0f, 0.5f, 1.0f);
-//		float val = recursiveRepeaterTurbulence(ditheredPos, 4, 8, 2.0f, 0.5f, 1.0f);
 //		float val = cubicValue(ditheredPos, 1.0f);
 //		float val = fadedValue(ditheredPos, 1.0f);
 
@@ -83,9 +82,19 @@ void setSeed(int newSeed)
 
 void redrawTexture()
 {
+	time_t startTime = clock();
+
 	cudaGraphicsMapResources(1, &resource, NULL);
-	kernel << < blocks, threads >> > (devPtr, zoom *= 1.0001f, 1, genSeed);
+	kernel << < blocks, threads >> > (devPtr, zoom *= 1.0001f, 1, genSeed);	
+	cudaDeviceSynchronize();
 	cudaGraphicsUnmapResources(1, &resource, NULL);
+
+	time_t endTime = clock();
+
+	double time_spent = (double)(endTime - startTime) / CLOCKS_PER_SEC;
+
+//	std::cout << "Time taken: " << time_spent << std::endl;
+	printf("Time spent: %f\n", time_spent);
 
 	glutPostRedisplay();
 }

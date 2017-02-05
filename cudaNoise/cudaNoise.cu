@@ -58,9 +58,16 @@ __device__ float checker(float x, float y, float z, float scale)
 	return 0.0f;
 }
 
-__device__ float rn(int x, int y, int z, int seed = 0)
+// Random float for a grid coordinate [-1, 1]
+__device__ float rf(int x, int y, int z, int seed = 0)
 {
 	return mapToSigned(getRandomValue((unsigned int)(x * 1723 + y * 93241 + z * 149812 + 3824 + seed)));
+}
+
+// Random unsigned int for a grid coordinate [0, MAXINT]
+__device__ unsigned int ri(int x, int y, int z, int seed = 0)
+{
+	return hash((unsigned int)(x * 1723 + y * 93241 + z * 149812 + 3824 + seed));
 }
 
 __device__ float3 vectorNoise(int x, int y, int z)
@@ -134,25 +141,25 @@ __device__ float fade(float t)
 __device__ float tricubic(int x, int y, int z, float u, float v, float w)
 {
 	// interpolate along x first
-	float x00 = cubic(rn(x - 1, y - 1, z - 1), rn(x, y - 1, z - 1), rn(x + 1, y - 1, z - 1), rn(x + 2, y - 1, z - 1), u);
-	float x01 = cubic(rn(x - 1, y - 1, z), rn(x, y - 1, z), rn(x + 1, y - 1, z), rn(x + 2, y - 1, z), u);
-	float x02 = cubic(rn(x - 1, y - 1, z + 1), rn(x, y - 1, z + 1), rn(x + 1, y - 1, z + 1), rn(x + 2, y - 1, z + 1), u);
-	float x03 = cubic(rn(x - 1, y - 1, z + 2), rn(x, y - 1, z + 2), rn(x + 1, y - 1, z + 2), rn(x + 2, y - 1, z + 2), u);
+	float x00 = cubic(rf(x - 1, y - 1, z - 1), rf(x, y - 1, z - 1), rf(x + 1, y - 1, z - 1), rf(x + 2, y - 1, z - 1), u);
+	float x01 = cubic(rf(x - 1, y - 1, z), rf(x, y - 1, z), rf(x + 1, y - 1, z), rf(x + 2, y - 1, z), u);
+	float x02 = cubic(rf(x - 1, y - 1, z + 1), rf(x, y - 1, z + 1), rf(x + 1, y - 1, z + 1), rf(x + 2, y - 1, z + 1), u);
+	float x03 = cubic(rf(x - 1, y - 1, z + 2), rf(x, y - 1, z + 2), rf(x + 1, y - 1, z + 2), rf(x + 2, y - 1, z + 2), u);
 
-	float x10 = cubic(rn(x - 1, y, z - 1), rn(x, y, z - 1), rn(x + 1, y, z - 1), rn(x + 2, y, z - 1), u);
-	float x11 = cubic(rn(x - 1, y, z), rn(x, y, z), rn(x + 1, y, z), rn(x + 2, y, z), u);
-	float x12 = cubic(rn(x - 1, y, z + 1), rn(x, y, z + 1), rn(x + 1, y, z + 1), rn(x + 2, y, z + 1), u);
-	float x13 = cubic(rn(x - 1, y, z + 2), rn(x, y, z + 2), rn(x + 1, y, z + 2), rn(x + 2, y, z + 2), u);
+	float x10 = cubic(rf(x - 1, y, z - 1), rf(x, y, z - 1), rf(x + 1, y, z - 1), rf(x + 2, y, z - 1), u);
+	float x11 = cubic(rf(x - 1, y, z), rf(x, y, z), rf(x + 1, y, z), rf(x + 2, y, z), u);
+	float x12 = cubic(rf(x - 1, y, z + 1), rf(x, y, z + 1), rf(x + 1, y, z + 1), rf(x + 2, y, z + 1), u);
+	float x13 = cubic(rf(x - 1, y, z + 2), rf(x, y, z + 2), rf(x + 1, y, z + 2), rf(x + 2, y, z + 2), u);
 
-	float x20 = cubic(rn(x - 1, y + 1, z - 1), rn(x, y + 1, z - 1), rn(x + 1, y + 1, z - 1), rn(x + 2, y + 1, z - 1), u);
-	float x21 = cubic(rn(x - 1, y + 1, z), rn(x, y + 1, z), rn(x + 1, y + 1, z), rn(x + 2, y + 1, z), u);
-	float x22 = cubic(rn(x - 1, y + 1, z + 1), rn(x, y + 1, z + 1), rn(x + 1, y + 1, z + 1), rn(x + 2, y + 1, z + 1), u);
-	float x23 = cubic(rn(x - 1, y + 1, z + 2), rn(x, y + 1, z + 2), rn(x + 1, y + 1, z + 2), rn(x + 2, y + 1, z + 2), u);
+	float x20 = cubic(rf(x - 1, y + 1, z - 1), rf(x, y + 1, z - 1), rf(x + 1, y + 1, z - 1), rf(x + 2, y + 1, z - 1), u);
+	float x21 = cubic(rf(x - 1, y + 1, z), rf(x, y + 1, z), rf(x + 1, y + 1, z), rf(x + 2, y + 1, z), u);
+	float x22 = cubic(rf(x - 1, y + 1, z + 1), rf(x, y + 1, z + 1), rf(x + 1, y + 1, z + 1), rf(x + 2, y + 1, z + 1), u);
+	float x23 = cubic(rf(x - 1, y + 1, z + 2), rf(x, y + 1, z + 2), rf(x + 1, y + 1, z + 2), rf(x + 2, y + 1, z + 2), u);
 
-	float x30 = cubic(rn(x - 1, y + 2, z - 1), rn(x, y + 2, z - 1), rn(x + 1, y + 2, z - 1), rn(x + 2, y + 2, z - 1), u);
-	float x31 = cubic(rn(x - 1, y + 2, z), rn(x, y + 2, z), rn(x + 1, y + 2, z), rn(x + 2, y + 2, z), u);
-	float x32 = cubic(rn(x - 1, y + 2, z + 1), rn(x, y + 2, z + 1), rn(x + 1, y + 2, z + 1), rn(x + 2, y + 2, z + 1), u);
-	float x33 = cubic(rn(x - 1, y + 2, z + 2), rn(x, y + 2, z + 2), rn(x + 1, y + 2, z + 2), rn(x + 2, y + 2, z + 2), u);
+	float x30 = cubic(rf(x - 1, y + 2, z - 1), rf(x, y + 2, z - 1), rf(x + 1, y + 2, z - 1), rf(x + 2, y + 2, z - 1), u);
+	float x31 = cubic(rf(x - 1, y + 2, z), rf(x, y + 2, z), rf(x + 1, y + 2, z), rf(x + 2, y + 2, z), u);
+	float x32 = cubic(rf(x - 1, y + 2, z + 1), rf(x, y + 2, z + 1), rf(x + 1, y + 2, z + 1), rf(x + 2, y + 2, z + 1), u);
+	float x33 = cubic(rf(x - 1, y + 2, z + 2), rf(x, y + 2, z + 2), rf(x + 1, y + 2, z + 2), rf(x + 2, y + 2, z + 2), u);
 
 	// interpolate along y
 	float y0 = cubic(x00, x10, x20, x30, v);
@@ -165,13 +172,13 @@ __device__ float tricubic(int x, int y, int z, float u, float v, float w)
 
 }
 
-__device__ float discreteNoise(float x, float y, float z, float scale)
+__device__ float discreteNoise(float3 pos, float scale, int seed)
 {
-	int ix = (int)(x * scale);
-	int iy = (int)(y * scale);
-	int iz = (int)(z * scale);
+	int ix = (int)(pos.x * scale);
+	int iy = (int)(pos.y * scale);
+	int iz = (int)(pos.z * scale);
 
-	return rn(ix, iy, iz);
+	return rf(ix, iy, iz, seed);
 }
 
 __device__ float linearValue(float3 pos, float scale = 1.0f, int seed = 0)
@@ -185,14 +192,14 @@ __device__ float linearValue(float3 pos, float scale = 1.0f, int seed = 0)
 	float w = pos.z - iz;
 
 	// Corner values
-	float a000 = rn(ix, iy, iz, seed);
-	float a100 = rn(ix + 1, iy, iz, seed);
-	float a010 = rn(ix, iy + 1, iz, seed);
-	float a110 = rn(ix + 1, iy + 1, iz, seed);
-	float a001 = rn(ix, iy, iz + 1, seed);
-	float a101 = rn(ix + 1, iy, iz + 1, seed);
-	float a011 = rn(ix, iy + 1, iz + 1, seed);
-	float a111 = rn(ix + 1, iy + 1, iz + 1, seed);
+	float a000 = rf(ix, iy, iz, seed);
+	float a100 = rf(ix + 1, iy, iz, seed);
+	float a010 = rf(ix, iy + 1, iz, seed);
+	float a110 = rf(ix + 1, iy + 1, iz, seed);
+	float a001 = rf(ix, iy, iz + 1, seed);
+	float a101 = rf(ix + 1, iy, iz + 1, seed);
+	float a011 = rf(ix, iy + 1, iz + 1, seed);
+	float a111 = rf(ix + 1, iy + 1, iz + 1, seed);
 
 	// Linear interpolation
 	float x00 = lerp(a000, a100, u);
@@ -217,14 +224,14 @@ __device__ float fadedValue(float3 pos, float scale = 1.0f)
 	float w = fade(pos.z - iz);
 
 	// Corner values
-	float a000 = rn(ix, iy, iz);
-	float a100 = rn(ix + 1, iy, iz);
-	float a010 = rn(ix, iy + 1, iz);
-	float a110 = rn(ix + 1, iy + 1, iz);
-	float a001 = rn(ix, iy, iz + 1);
-	float a101 = rn(ix + 1, iy, iz + 1);
-	float a011 = rn(ix, iy + 1, iz + 1);
-	float a111 = rn(ix + 1, iy + 1, iz + 1);
+	float a000 = rf(ix, iy, iz);
+	float a100 = rf(ix + 1, iy, iz);
+	float a010 = rf(ix, iy + 1, iz);
+	float a110 = rf(ix + 1, iy + 1, iz);
+	float a001 = rf(ix, iy, iz + 1);
+	float a101 = rf(ix + 1, iy, iz + 1);
+	float a011 = rf(ix, iy + 1, iz + 1);
+	float a111 = rf(ix + 1, iy + 1, iz + 1);
 
 	// Linear interpolation
 	float x00 = lerp(a000, a100, u);
@@ -269,14 +276,14 @@ __device__ float perlinNoise(float3 pos, float scale = 1.0f, int seed = 0)
 	float w = fade(pos.z);
 
 	// influence values
-	float i000 = grad(rn(ix, iy, iz, seed), pos.x, pos.y, pos.z);
-	float i100 = grad(rn(ix + 1, iy, iz, seed), pos.x - 1.0f, pos.y, pos.z);
-	float i010 = grad(rn(ix, iy + 1, iz, seed), pos.x, pos.y - 1.0f, pos.z);
-	float i110 = grad(rn(ix + 1, iy + 1, iz, seed), pos.x - 1.0f, pos.y - 1.0f, pos.z);
-	float i001 = grad(rn(ix, iy, iz + 1, seed), pos.x, pos.y, pos.z - 1.0f);
-	float i101 = grad(rn(ix + 1, iy, iz + 1, seed), pos.x - 1.0f, pos.y, pos.z - 1.0f);
-	float i011 = grad(rn(ix, iy + 1, iz + 1, seed), pos.x, pos.y - 1.0f, pos.z - 1.0f);
-	float i111 = grad(rn(ix + 1, iy + 1, iz + 1, seed), pos.x - 1.0f, pos.y - 1.0f, pos.z - 1.0f);
+	float i000 = grad(ri(ix, iy, iz, seed), pos.x, pos.y, pos.z);
+	float i100 = grad(ri(ix + 1, iy, iz, seed), pos.x - 1.0f, pos.y, pos.z);
+	float i010 = grad(ri(ix, iy + 1, iz, seed), pos.x, pos.y - 1.0f, pos.z);
+	float i110 = grad(ri(ix + 1, iy + 1, iz, seed), pos.x - 1.0f, pos.y - 1.0f, pos.z);
+	float i001 = grad(ri(ix, iy, iz + 1, seed), pos.x, pos.y, pos.z - 1.0f);
+	float i101 = grad(ri(ix + 1, iy, iz + 1, seed), pos.x - 1.0f, pos.y, pos.z - 1.0f);
+	float i011 = grad(ri(ix, iy + 1, iz + 1, seed), pos.x, pos.y - 1.0f, pos.z - 1.0f);
+	float i111 = grad(ri(ix + 1, iy + 1, iz + 1, seed), pos.x - 1.0f, pos.y - 1.0f, pos.z - 1.0f);
 
 	// interpolation
 	float x00 = lerp(i000, i100, u);
@@ -292,9 +299,8 @@ __device__ float perlinNoise(float3 pos, float scale = 1.0f, int seed = 0)
 	return avg;
 }
 
-__device__ float repeater(float3 pos, int n, float harmonic = 2.0f, float decay = 0.5f, basisFunction basis = CUDANOISE_PERLIN)
+__device__ float repeater(float3 pos, float scale, int seed, int n, float harmonic = 2.0f, float decay = 0.5f, basisFunction basis = CUDANOISE_PERLIN)
 {
-	float scale = 1.0f;
 	float acc = 0.0f;
 	float amp = 1.0f;
 
@@ -303,7 +309,7 @@ __device__ float repeater(float3 pos, int n, float harmonic = 2.0f, float decay 
 		switch (basis)
 		{
 		case(CUDANOISE_LINEARVALUE):
-			acc += linearValue(make_float3(pos.x * scale, pos.y * scale, pos.z * scale)) * amp;
+			acc += linearValue(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed) * amp;
 			break;
 		case(CUDANOISE_FADEDVALUE):
 			acc += fadedValue(make_float3(pos.x * scale, pos.y * scale, pos.z * scale)) * amp;
@@ -312,7 +318,7 @@ __device__ float repeater(float3 pos, int n, float harmonic = 2.0f, float decay 
 			acc += cubicValue(make_float3(pos.x * scale, pos.y * scale, pos.z * scale)) * amp;
 			break;
 		case(CUDANOISE_PERLIN):
-			acc += perlinNoise(make_float3(pos.x * scale, pos.y * scale, pos.z * scale)) * amp;
+			acc += perlinNoise(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed) * amp;
 			break;
 		}
 
@@ -332,9 +338,9 @@ __device__ float turbulence(float3 pos, float strength)
 
 __device__ float repeaterTurbulence(float3 pos, float strength, int n)
 {
-	pos.x += (repeater(make_float3(pos.x, pos.y, pos.z), n)) * strength;
+	pos.x += (repeater(make_float3(pos.x, pos.y, pos.z), 1.0f, 0, n)) * strength;
 
-	return repeater(pos, n);
+	return repeater(pos, 1.0f, 0, n);
 }
 
 __device__ float recursiveTurbulence(float3 pos, int n, float harmonic = 2.0f, float decay = 0.5f, float strength = 1.0f)
@@ -351,28 +357,6 @@ __device__ float recursiveTurbulence(float3 pos, int n, float harmonic = 2.0f, f
 		displace.x += perlinNoise(make_float3(pos.x, pos.y, pos.z)) * amp * strength;
 		displace.y += acc * strength;
 		displace.z += perlinNoise(make_float3(acc, acc, acc)) * amp * strength;
-
-		scale *= harmonic;
-		amp *= decay;
-	}
-
-	return acc / 1.0f;
-}
-
-__device__ float recursiveRepeaterTurbulence(float3 pos, int n, int m, float harmonic = 2.0f, float decay = 0.5f, float strength = 1.0f)
-{
-	float3 displace = make_float3(pos.x, pos.y, pos.z);
-	float scale = 1.0f;
-	float amp = 1.0f;
-	float acc = 0.0f;
-
-	for (int i = 0; i < n; i++)
-	{
-		acc += repeater(scaleVector(displace, scale), m) * amp;
-
-		displace.x += repeater(make_float3(pos.x, pos.y, pos.z), m) * amp * strength;
-		displace.y += acc * strength;
-		displace.z += repeater(make_float3(acc, acc, acc), m) * amp * strength;
 
 		scale *= harmonic;
 		amp *= decay;
