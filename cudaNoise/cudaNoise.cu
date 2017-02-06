@@ -46,11 +46,11 @@ __device__ float mapToUnsigned(float input)
 	return input * 0.5f + 0.5f;
 }
 
-__device__ float checker(float x, float y, float z, float scale)
+__device__ float checker(float3 pos, float scale, int seed)
 {
-	int ix = (int)(x * scale);
-	int iy = (int)(y * scale);
-	int iz = (int)(z * scale);
+	int ix = (int)(pos.x * scale);
+	int iy = (int)(pos.y * scale);
+	int iz = (int)(pos.z * scale);
 
 	if ((ix + iy + iz) % 2 == 0)
 		return 1.0f;
@@ -64,7 +64,7 @@ __device__ float rf(int x, int y, int z, int seed = 0)
 	return mapToSigned(getRandomValue((unsigned int)(x * 1723 + y * 93241 + z * 149812 + 3824 + seed)));
 }
 
-// Random unsigned int for a grid coordinate [0, MAXINT]
+// Random unsigned int for a grid coordinate [0, MAXUINT]
 __device__ unsigned int ri(int x, int y, int z, int seed = 0)
 {
 	return hash((unsigned int)(x * 1723 + y * 93241 + z * 149812 + 3824 + seed));
@@ -181,7 +181,7 @@ __device__ float discreteNoise(float3 pos, float scale, int seed)
 	return rf(ix, iy, iz, seed);
 }
 
-__device__ float linearValue(float3 pos, float scale = 1.0f, int seed = 0)
+__device__ float linearValue(float3 pos, float scale, int seed)
 {
 	int ix = (int)pos.x;
 	int iy = (int)pos.y;
@@ -213,7 +213,7 @@ __device__ float linearValue(float3 pos, float scale = 1.0f, int seed = 0)
 	return lerp(y0, y1, w);
 }
 
-__device__ float fadedValue(float3 pos, float scale = 1.0f)
+__device__ float fadedValue(float3 pos, float scale, int seed)
 {
 	int ix = (int)(pos.x * scale);
 	int iy = (int)(pos.y * scale);
@@ -245,7 +245,7 @@ __device__ float fadedValue(float3 pos, float scale = 1.0f)
 	return lerp(y0, y1, w) / 2.0f * 1.0f;
 }
 
-__device__ float cubicValue(float3 pos, float scale = 1.0f)
+__device__ float cubicValue(float3 pos, float scale, int seed)
 {
 	int ix = (int)(pos.x * scale);
 	int iy = (int)(pos.y * scale);
@@ -258,7 +258,7 @@ __device__ float cubicValue(float3 pos, float scale = 1.0f)
 	return tricubic(ix, iy, iz, u, v, w);
 }
 
-__device__ float perlinNoise(float3 pos, float scale = 1.0f, int seed = 0)
+__device__ float perlinNoise(float3 pos, float scale, int seed)
 {
 	// zero corner integer position
 	int ix = (int)floorf(pos.x);
@@ -299,7 +299,7 @@ __device__ float perlinNoise(float3 pos, float scale = 1.0f, int seed = 0)
 	return avg;
 }
 
-__device__ float repeater(float3 pos, float scale, int seed, int n, float harmonic = 2.0f, float decay = 0.5f, basisFunction basis = CUDANOISE_PERLIN)
+__device__ float repeater(float3 pos, float scale, int seed, int n, float harmonic, float decay, basisFunction basis)
 {
 	float acc = 0.0f;
 	float amp = 1.0f;
@@ -308,14 +308,17 @@ __device__ float repeater(float3 pos, float scale, int seed, int n, float harmon
 	{
 		switch (basis)
 		{
+		case(CUDANOISE_CHECKER):
+			acc += checker(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed) * amp;
+			break;
 		case(CUDANOISE_LINEARVALUE):
 			acc += linearValue(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed) * amp;
 			break;
 		case(CUDANOISE_FADEDVALUE):
-			acc += fadedValue(make_float3(pos.x * scale, pos.y * scale, pos.z * scale)) * amp;
+			acc += fadedValue(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed) * amp;
 			break;
 		case(CUDANOISE_CUBICVALUE):
-			acc += cubicValue(make_float3(pos.x * scale, pos.y * scale, pos.z * scale)) * amp;
+			acc += cubicValue(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed) * amp;
 			break;
 		case(CUDANOISE_PERLIN):
 			acc += perlinNoise(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed) * amp;
@@ -329,21 +332,57 @@ __device__ float repeater(float3 pos, float scale, int seed, int n, float harmon
 	return acc;
 }
 
-__device__ float turbulence(float3 pos, float strength)
+__device__ float turbulence(float3 pos, float scale, int seed, float strength, basisFunction inFunc, basisFunction outFunc)
 {
-	pos.x += perlinNoise(pos) * strength;
+	switch (inFunc)
+	{
+	case(CUDANOISE_CHECKER):
+		pos.x += checker(pos, scale, seed);
+		break;
+	case(CUDANOISE_LINEARVALUE):
+		pos.x += linearValue(pos, scale, seed);
+		break;
+	case(CUDANOISE_FADEDVALUE):
+		pos.x += fadedValue(pos, scale, seed);
+		break;
+	case(CUDANOISE_CUBICVALUE):
+		pos.x += cubicValue(pos, scale, seed);
+		break;
+	case(CUDANOISE_PERLIN):
+		pos.x += perlinNoise(pos, scale, seed);
+		break;
+	}
 
-	return perlinNoise(pos);
+	switch (outFunc)
+	{
+	case(CUDANOISE_CHECKER):
+		return checker(pos, scale, seed);
+		break;
+	case(CUDANOISE_LINEARVALUE):
+		return linearValue(pos, scale, seed);
+		break;
+	case(CUDANOISE_FADEDVALUE):
+		return fadedValue(pos, scale, seed);
+		break;
+	case(CUDANOISE_CUBICVALUE):
+		return cubicValue(pos, scale, seed);
+		break;
+	case(CUDANOISE_PERLIN):
+		return perlinNoise(pos, scale, seed);
+		break;
+	}
+
+	return 0.0f;
 }
 
 __device__ float repeaterTurbulence(float3 pos, float strength, int n)
 {
-	pos.x += (repeater(make_float3(pos.x, pos.y, pos.z), 1.0f, 0, n)) * strength;
+	pos.x += (repeater(make_float3(pos.x, pos.y, pos.z), 1.0f, 0, n, 1.0f, 0, CUDANOISE_PERLIN)) * strength;
 
-	return repeater(pos, 1.0f, 0, n);
+	return repeater(pos, 1.0f, 0, n, 1.0f, 0, CUDANOISE_PERLIN);
 }
 
-__device__ float recursiveTurbulence(float3 pos, int n, float harmonic = 2.0f, float decay = 0.5f, float strength = 1.0f)
+__device__ float recursiveTurbulence(float3 pos, int n, float harmonic, float decay, float strength)
 {
 	float3 displace = make_float3(pos.x, pos.y, pos.z);
 	float scale = 1.0f;
@@ -352,11 +391,11 @@ __device__ float recursiveTurbulence(float3 pos, int n, float harmonic = 2.0f, f
 
 	for (int i = 0; i < n; i++)
 	{
-		acc += perlinNoise(scaleVector(displace, scale)) * amp;
+		acc += perlinNoise(scaleVector(displace, scale), 1.0f, 0) * amp;
 
-		displace.x += perlinNoise(make_float3(pos.x, pos.y, pos.z)) * amp * strength;
+		displace.x += perlinNoise(make_float3(pos.x, pos.y, pos.z), 1.0f, 0) * amp * strength;
 		displace.y += acc * strength;
-		displace.z += perlinNoise(make_float3(acc, acc, acc)) * amp * strength;
+		displace.z += perlinNoise(make_float3(acc, acc, acc), 1.0f, 0) * amp * strength;
 
 		scale *= harmonic;
 		amp *= decay;
