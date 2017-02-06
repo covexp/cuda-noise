@@ -247,9 +247,13 @@ __device__ float fadedValue(float3 pos, float scale, int seed)
 
 __device__ float cubicValue(float3 pos, float scale, int seed)
 {
-	int ix = (int)(pos.x * scale);
-	int iy = (int)(pos.y * scale);
-	int iz = (int)(pos.z * scale);
+	pos.x = pos.x * scale;
+	pos.y = pos.y * scale;
+	pos.z = pos.z * scale;
+
+	int ix = (int)pos.x;
+	int iy = (int)pos.y;
+	int iz = (int)pos.z;
 
 	float u = pos.x - ix;
 	float v = pos.y - iy;
@@ -260,6 +264,10 @@ __device__ float cubicValue(float3 pos, float scale, int seed)
 
 __device__ float perlinNoise(float3 pos, float scale, int seed)
 {
+	pos.x = pos.x * scale;
+	pos.y = pos.y * scale;
+	pos.z = pos.z * scale;
+
 	// zero corner integer position
 	int ix = (int)floorf(pos.x);
 	int iy = (int)floorf(pos.y);
@@ -332,43 +340,53 @@ __device__ float repeater(float3 pos, float scale, int seed, int n, float harmon
 	return acc;
 }
 
-__device__ float turbulence(float3 pos, float scale, int seed, float strength, basisFunction inFunc, basisFunction outFunc)
+__device__ float turbulence(float3 pos, float scaleIn, float scaleOut, int seed, float strength, basisFunction inFunc, basisFunction outFunc)
 {
 	switch (inFunc)
 	{
 	case(CUDANOISE_CHECKER):
-		pos.x += checker(pos, scale, seed);
+		pos.x += checker(pos, scaleIn, seed) * strength;
+		pos.y += checker(pos, scaleIn, seed) * strength;
+		pos.z += checker(pos, scaleIn, seed) * strength;
 		break;
 	case(CUDANOISE_LINEARVALUE):
-		pos.x += linearValue(pos, scale, seed);
+		pos.x += linearValue(pos, scaleIn, seed) * strength;
+		pos.y += linearValue(pos, scaleIn, seed) * strength;
+		pos.z += linearValue(pos, scaleIn, seed) * strength;
 		break;
 	case(CUDANOISE_FADEDVALUE):
-		pos.x += fadedValue(pos, scale, seed);
+		pos.x += fadedValue(pos, scaleIn, seed) * strength;
+		pos.y += fadedValue(pos, scaleIn, seed) * strength;
+		pos.z += fadedValue(pos, scaleIn, seed) * strength;
 		break;
 	case(CUDANOISE_CUBICVALUE):
-		pos.x += cubicValue(pos, scale, seed);
+		pos.x += cubicValue(pos, scaleIn, seed) * strength;
+		pos.y += cubicValue(pos, scaleIn, seed) * strength;
+		pos.z += cubicValue(pos, scaleIn, seed) * strength;
 		break;
 	case(CUDANOISE_PERLIN):
-		pos.x += perlinNoise(pos, scale, seed);
+		pos.x += perlinNoise(pos, scaleIn, seed) * strength;
+		pos.y += perlinNoise(pos, scaleIn, seed) * strength;
+		pos.z += perlinNoise(pos, scaleIn, seed) * strength;
 		break;
 	}
 
 	switch (outFunc)
 	{
 	case(CUDANOISE_CHECKER):
-		return checker(pos, scale, seed);
+		return checker(pos, scaleOut, seed);
 		break;
 	case(CUDANOISE_LINEARVALUE):
-		return linearValue(pos, scale, seed);
+		return linearValue(pos, scaleOut, seed);
 		break;
 	case(CUDANOISE_FADEDVALUE):
-		return fadedValue(pos, scale, seed);
+		return fadedValue(pos, scaleOut, seed);
 		break;
 	case(CUDANOISE_CUBICVALUE):
-		return cubicValue(pos, scale, seed);
+		return cubicValue(pos, scaleOut, seed);
 		break;
 	case(CUDANOISE_PERLIN):
-		return perlinNoise(pos, scale, seed);
+		return perlinNoise(pos, scaleOut, seed);
 		break;
 	}
 
