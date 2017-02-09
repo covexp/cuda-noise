@@ -15,12 +15,22 @@ __device__ unsigned int hash(unsigned int a)
 	a = (a + 0xd3a2646c) ^ (a << 9);
 	a = (a + 0xfd7046c5) + (a << 3);
 	a = (a ^ 0xb55a4f09) ^ (a >> 16);
+
 	return a;
+}
+
+__device__ int randomRange(int min, int max, int seed)
+{
+	int base = hash(seed);
+	base = base % (1 + max - min) + min;
+
+	return base;
 }
 
 __device__ float randomFloat(unsigned int seed)
 {
 	unsigned int noiseVal = hash(seed);
+
 	return ((float)noiseVal / (float)0xffffffff);
 }
 
@@ -149,28 +159,32 @@ __device__ float spots(float3 pos, float scale, int seed, float size, int minNum
 	float v = pos.y - (float)iy;
 	float w = pos.z - (float)iz;
 
-	float distU = 0.5f - u + randomFloat(seed + ix * 23784 + iy * 9183 + iz * 23874 + 334) * jitter - jitter / 2.0f;
-	float distV = 0.5f - v + randomFloat(seed + ix * 12743 + iy * 45191 + iz * 144421 + 2934) * jitter - jitter / 2.0f;
-	float distW = 0.5f - w + randomFloat(seed + ix * 82734 + iy * 900213 + iz * 443241 + 18237) * jitter - jitter / 2.0f;
+	int numSpots = randomRange(minNum, maxNum, seed + ix * 823746 + iy * 12306 + iz * 823452 + 3234874);
 
-	float distanceSq = distU * distU + distV * distV + distW * distW;
+	float val = -1.0f;
 
-	float val = 0.0f;
-
-	switch (shape)
+	for (int i = 0; i < numSpots; i++)
 	{
-	case(CUDANOISE_STEP):
-		if (distanceSq < size)
-			val = 1.0f;
-		else
-			val = -1.0f;
-		break;
-	case(CUDANOISE_LINEAR):
-		// UMM?
-		break;
-	case(CUDANOISE_PARABOLIC):
-		val = 1.0f - clamp(distanceSq, 0.0f, size) / size;
-		break;
+		float distU = 0.5f - u + randomFloat(seed + ix * 23784 + iy * 9183 + iz * 23874 + 334 * i + 27432) * jitter - jitter / 2.0f;
+		float distV = 0.5f - v + randomFloat(seed + ix * 12743 + iy * 45191 + iz * 144421 + 2934 * i + 76671) * jitter - jitter / 2.0f;
+		float distW = 0.5f - w + randomFloat(seed + ix * 82734 + iy * 900213 + iz * 443241 + 18237 * i + 199823) * jitter - jitter / 2.0f;
+		float distanceSq = distU * distU + distV * distV + distW * distW;
+
+		switch (shape)
+		{
+		case(CUDANOISE_STEP):
+			if (distanceSq < size)
+				val = fmaxf(val, 1.0f);
+			else
+				val = -1.0f;
+			break;
+		case(CUDANOISE_LINEAR):
+			val = fmaxf(val, fabsf(distU) + fabsf(distV) + fabsf(distW));
+			break;
+		case(CUDANOISE_PARABOLIC):
+			val = fmaxf(val, 1.0f - clamp(distanceSq, 0.0f, size) / size);
+			break;
+		}
 	}
 
 	return val;
