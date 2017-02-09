@@ -9,6 +9,13 @@ typedef enum { CUDANOISE_CHECKER,
 			   CUDANOISE_PERLIN 
 			 } basisFunction;
 
+typedef enum { CUDANOISE_STEP, 
+			   CUDANOISE_LINEAR, 
+			   CUDANOISE_PARABOLIC
+			 } profileShape;
+
+#define EPSILON 0.000000001f
+
 // Utility functions
 __device__ unsigned int hash(unsigned int a);
 __device__ float randomFloat(unsigned int seed);
@@ -29,7 +36,7 @@ __device__ float tricubic(int x, int y, int z, float u, float v, float w);
 
 // Noise functions
 __device__ float checker(float3 pos, float scale, int seed);
-__device__ float spots(float3 pos, float scale, int seed);
+__device__ float spots(float3 pos, float scale, int seed, float size, int minNum, int maxNum, float jitter, profileShape shape);
 __device__ float discreteNoise(float3 pos, float scale, int seed);
 __device__ float cubicValue(float3 pos, float scale, int seed);
 __device__ float linearValue(float3 pos, float scale, int seed);

@@ -136,8 +136,11 @@ __device__ float checker(float3 pos, float scale, int seed)
 	return 0.0f;
 }
 
-__device__ float spots(float3 pos, float scale, int seed)
+__device__ float spots(float3 pos, float scale, int seed, float size, int minNum, int maxNum, float jitter, profileShape shape)
 {
+	if (size < EPSILON)
+		return 0.0f;
+
 	int ix = (int)(pos.x * scale);
 	int iy = (int)(pos.y * scale);
 	int iz = (int)(pos.z * scale);
@@ -146,13 +149,31 @@ __device__ float spots(float3 pos, float scale, int seed)
 	float v = pos.y - (float)iy;
 	float w = pos.z - (float)iz;
 
-	float distU = 0.5f - u;
-	float distV = 0.5f - v;
-	float distW = 0.5f - w;
+	float distU = 0.5f - u + randomFloat(seed + ix * 23784 + iy * 9183 + iz * 23874 + 334) * jitter - jitter / 2.0f;
+	float distV = 0.5f - v + randomFloat(seed + ix * 12743 + iy * 45191 + iz * 144421 + 2934) * jitter - jitter / 2.0f;
+	float distW = 0.5f - w + randomFloat(seed + ix * 82734 + iy * 900213 + iz * 443241 + 18237) * jitter - jitter / 2.0f;
 
 	float distanceSq = distU * distU + distV * distV + distW * distW;
 
-	return 1.0f - clamp(distanceSq, 0.0f, 0.1f) * 10.0f;
+	float val = 0.0f;
+
+	switch (shape)
+	{
+	case(CUDANOISE_STEP):
+		if (distanceSq < size)
+			val = 1.0f;
+		else
+			val = -1.0f;
+		break;
+	case(CUDANOISE_LINEAR):
+		// UMM?
+		break;
+	case(CUDANOISE_PARABOLIC):
+		val = 1.0f - clamp(distanceSq, 0.0f, size) / size;
+		break;
+	}
+
+	return val;
 }
 
 __device__ float tricubic(int x, int y, int z, float u, float v, float w)
