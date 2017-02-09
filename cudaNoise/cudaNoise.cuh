@@ -29,6 +29,7 @@ __device__ float tricubic(int x, int y, int z, float u, float v, float w);
 
 // Noise functions
 __device__ float checker(float3 pos, float scale, int seed);
+__device__ float spots(float3 pos, float scale, int seed);
 __device__ float discreteNoise(float3 pos, float scale, int seed);
 __device__ float cubicValue(float3 pos, float scale, int seed);
 __device__ float linearValue(float3 pos, float scale, int seed);

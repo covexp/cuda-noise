@@ -33,7 +33,7 @@ __global__ void kernel(uchar4 *ptr, float zoomFactor, int samples, int seed)
 	float fx = x / (float)DIM;
 	float fy = y / (float)DIM;
 
-	float3 pos = make_float3(fx, fy, 0.0f);
+	float3 pos = make_float3(fx, fy, 0.5f);
 	pos = scaleVector(pos, zoomFactor);
 
 	float acc = 0.0f;
@@ -52,10 +52,11 @@ __global__ void kernel(uchar4 *ptr, float zoomFactor, int samples, int seed)
 //		float val = perlinNoise(ditheredPos, 1.0f, seed);
 //		float val = repeater(ditheredPos, 1.0f, seed, 2, 2.0f, 0.5f, CUDANOISE_PERLIN);
 //		float val = turbulence(ditheredPos, 4.0f, 1.0f, seed, 0.2f, CUDANOISE_PERLIN, CUDANOISE_CHECKER);
-		float val = repeaterTurbulence(ditheredPos, 0.2f, 1.0f, seed, 0.8f, 32, CUDANOISE_PERLIN, CUDANOISE_PERLIN);
+//		float val = repeaterTurbulence(ditheredPos, 0.2f, 1.0f, seed, 0.8f, 32, CUDANOISE_PERLIN, CUDANOISE_PERLIN);
 //		float val = recursiveTurbulence(ditheredPos, 3, 2.0f, 0.5f, 1.0f);
 //		float val = cubicValue(ditheredPos, 1.0f);
 //		float val = fadedValue(ditheredPos, 1.0f);
+		float val = spots(ditheredPos, 1.0f, seed);
 
 		acc += val;
 	}

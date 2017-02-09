@@ -136,6 +136,25 @@ __device__ float checker(float3 pos, float scale, int seed)
 	return 0.0f;
 }
 
+__device__ float spots(float3 pos, float scale, int seed)
+{
+	int ix = (int)(pos.x * scale);
+	int iy = (int)(pos.y * scale);
+	int iz = (int)(pos.z * scale);
+
+	float u = pos.x - (float)ix;
+	float v = pos.y - (float)iy;
+	float w = pos.z - (float)iz;
+
+	float distU = 0.5f - u;
+	float distV = 0.5f - v;
+	float distW = 0.5f - w;
+
+	float distanceSq = distU * distU + distV * distV + distW * distW;
+
+	return 1.0f - clamp(distanceSq, 0.0f, 0.1f) * 10.0f;
+}
+
 __device__ float tricubic(int x, int y, int z, float u, float v, float w)
 {
 	// interpolate along x first
