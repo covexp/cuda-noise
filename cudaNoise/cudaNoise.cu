@@ -9,8 +9,6 @@
 
 __device__ unsigned int hash(unsigned int a)
 {
-//	a += *genSeed;
-
 	a = (a + 0x7ed55d16) + (a << 12);
 	a = (a ^ 0xc761c23c) ^ (a >> 19);
 	a = (a + 0x165667b1) + (a << 5);
@@ -20,7 +18,7 @@ __device__ unsigned int hash(unsigned int a)
 	return a;
 }
 
-__device__ float getRandomValue(unsigned int seed)
+__device__ float randomFloat(unsigned int seed)
 {
 	unsigned int noiseVal = hash(seed);
 	return ((float)noiseVal / (float)0xffffffff);
@@ -46,34 +44,22 @@ __device__ float mapToUnsigned(float input)
 	return input * 0.5f + 0.5f;
 }
 
-__device__ float checker(float3 pos, float scale, int seed)
-{
-	int ix = (int)(pos.x * scale);
-	int iy = (int)(pos.y * scale);
-	int iz = (int)(pos.z * scale);
-
-	if ((ix + iy + iz) % 2 == 0)
-		return 1.0f;
-
-	return 0.0f;
-}
-
 // Random float for a grid coordinate [-1, 1]
-__device__ float rf(int x, int y, int z, int seed = 0)
+__device__ float randomGrid(int x, int y, int z, int seed = 0)
 {
-	return mapToSigned(getRandomValue((unsigned int)(x * 1723 + y * 93241 + z * 149812 + 3824 + seed)));
+	return mapToSigned(randomFloat((unsigned int)(x * 1723 + y * 93241 + z * 149812 + 3824 + seed)));
 }
 
 // Random unsigned int for a grid coordinate [0, MAXUINT]
-__device__ unsigned int ri(int x, int y, int z, int seed = 0)
+__device__ unsigned int randomIntGrid(int x, int y, int z, int seed = 0)
 {
 	return hash((unsigned int)(x * 1723 + y * 93241 + z * 149812 + 3824 + seed));
 }
 
 __device__ float3 vectorNoise(int x, int y, int z)
 {
-	return make_float3(getRandomValue(x * 8231 + y * 34612 + z * 11836 + 19283) * 2.0f - 1.0f,
-		   			   getRandomValue(x * 1171 + y * 9234 + z * 992903 + 1466) * 2.0f - 1.0f,
+	return make_float3(randomFloat(x * 8231 + y * 34612 + z * 11836 + 19283) * 2.0f - 1.0f,
+		   			   randomFloat(x * 1171 + y * 9234 + z * 992903 + 1466) * 2.0f - 1.0f,
 					   0.0f);
 }
 
@@ -138,28 +124,40 @@ __device__ float fade(float t)
 
 // Noise functions
 
+__device__ float checker(float3 pos, float scale, int seed)
+{
+	int ix = (int)(pos.x * scale);
+	int iy = (int)(pos.y * scale);
+	int iz = (int)(pos.z * scale);
+
+	if ((ix + iy + iz) % 2 == 0)
+		return 1.0f;
+
+	return 0.0f;
+}
+
 __device__ float tricubic(int x, int y, int z, float u, float v, float w)
 {
 	// interpolate along x first
-	float x00 = cubic(rf(x - 1, y - 1, z - 1), rf(x, y - 1, z - 1), rf(x + 1, y - 1, z - 1), rf(x + 2, y - 1, z - 1), u);
-	float x01 = cubic(rf(x - 1, y - 1, z), rf(x, y - 1, z), rf(x + 1, y - 1, z), rf(x + 2, y - 1, z), u);
-	float x02 = cubic(rf(x - 1, y - 1, z + 1), rf(x, y - 1, z + 1), rf(x + 1, y - 1, z + 1), rf(x + 2, y - 1, z + 1), u);
-	float x03 = cubic(rf(x - 1, y - 1, z + 2), rf(x, y - 1, z + 2), rf(x + 1, y - 1, z + 2), rf(x + 2, y - 1, z + 2), u);
+	float x00 = cubic(randomGrid(x - 1, y - 1, z - 1), randomGrid(x, y - 1, z - 1), randomGrid(x + 1, y - 1, z - 1), randomGrid(x + 2, y - 1, z - 1), u);
+	float x01 = cubic(randomGrid(x - 1, y - 1, z), randomGrid(x, y - 1, z), randomGrid(x + 1, y - 1, z), randomGrid(x + 2, y - 1, z), u);
+	float x02 = cubic(randomGrid(x - 1, y - 1, z + 1), randomGrid(x, y - 1, z + 1), randomGrid(x + 1, y - 1, z + 1), randomGrid(x + 2, y - 1, z + 1), u);
+	float x03 = cubic(randomGrid(x - 1, y - 1, z + 2), randomGrid(x, y - 1, z + 2), randomGrid(x + 1, y - 1, z + 2), randomGrid(x + 2, y - 1, z + 2), u);
 
-	float x10 = cubic(rf(x - 1, y, z - 1), rf(x, y, z - 1), rf(x + 1, y, z - 1), rf(x + 2, y, z - 1), u);
-	float x11 = cubic(rf(x - 1, y, z), rf(x, y, z), rf(x + 1, y, z), rf(x + 2, y, z), u);
-	float x12 = cubic(rf(x - 1, y, z + 1), rf(x, y, z + 1), rf(x + 1, y, z + 1), rf(x + 2, y, z + 1), u);
-	float x13 = cubic(rf(x - 1, y, z + 2), rf(x, y, z + 2), rf(x + 1, y, z + 2), rf(x + 2, y, z + 2), u);
+	float x10 = cubic(randomGrid(x - 1, y, z - 1), randomGrid(x, y, z - 1), randomGrid(x + 1, y, z - 1), randomGrid(x + 2, y, z - 1), u);
+	float x11 = cubic(randomGrid(x - 1, y, z), randomGrid(x, y, z), randomGrid(x + 1, y, z), randomGrid(x + 2, y, z), u);
+	float x12 = cubic(randomGrid(x - 1, y, z + 1), randomGrid(x, y, z + 1), randomGrid(x + 1, y, z + 1), randomGrid(x + 2, y, z + 1), u);
+	float x13 = cubic(randomGrid(x - 1, y, z + 2), randomGrid(x, y, z + 2), randomGrid(x + 1, y, z + 2), randomGrid(x + 2, y, z + 2), u);
 
-	float x20 = cubic(rf(x - 1, y + 1, z - 1), rf(x, y + 1, z - 1), rf(x + 1, y + 1, z - 1), rf(x + 2, y + 1, z - 1), u);
-	float x21 = cubic(rf(x - 1, y + 1, z), rf(x, y + 1, z), rf(x + 1, y + 1, z), rf(x + 2, y + 1, z), u);
-	float x22 = cubic(rf(x - 1, y + 1, z + 1), rf(x, y + 1, z + 1), rf(x + 1, y + 1, z + 1), rf(x + 2, y + 1, z + 1), u);
-	float x23 = cubic(rf(x - 1, y + 1, z + 2), rf(x, y + 1, z + 2), rf(x + 1, y + 1, z + 2), rf(x + 2, y + 1, z + 2), u);
+	float x20 = cubic(randomGrid(x - 1, y + 1, z - 1), randomGrid(x, y + 1, z - 1), randomGrid(x + 1, y + 1, z - 1), randomGrid(x + 2, y + 1, z - 1), u);
+	float x21 = cubic(randomGrid(x - 1, y + 1, z), randomGrid(x, y + 1, z), randomGrid(x + 1, y + 1, z), randomGrid(x + 2, y + 1, z), u);
+	float x22 = cubic(randomGrid(x - 1, y + 1, z + 1), randomGrid(x, y + 1, z + 1), randomGrid(x + 1, y + 1, z + 1), randomGrid(x + 2, y + 1, z + 1), u);
+	float x23 = cubic(randomGrid(x - 1, y + 1, z + 2), randomGrid(x, y + 1, z + 2), randomGrid(x + 1, y + 1, z + 2), randomGrid(x + 2, y + 1, z + 2), u);
 
-	float x30 = cubic(rf(x - 1, y + 2, z - 1), rf(x, y + 2, z - 1), rf(x + 1, y + 2, z - 1), rf(x + 2, y + 2, z - 1), u);
-	float x31 = cubic(rf(x - 1, y + 2, z), rf(x, y + 2, z), rf(x + 1, y + 2, z), rf(x + 2, y + 2, z), u);
-	float x32 = cubic(rf(x - 1, y + 2, z + 1), rf(x, y + 2, z + 1), rf(x + 1, y + 2, z + 1), rf(x + 2, y + 2, z + 1), u);
-	float x33 = cubic(rf(x - 1, y + 2, z + 2), rf(x, y + 2, z + 2), rf(x + 1, y + 2, z + 2), rf(x + 2, y + 2, z + 2), u);
+	float x30 = cubic(randomGrid(x - 1, y + 2, z - 1), randomGrid(x, y + 2, z - 1), randomGrid(x + 1, y + 2, z - 1), randomGrid(x + 2, y + 2, z - 1), u);
+	float x31 = cubic(randomGrid(x - 1, y + 2, z), randomGrid(x, y + 2, z), randomGrid(x + 1, y + 2, z), randomGrid(x + 2, y + 2, z), u);
+	float x32 = cubic(randomGrid(x - 1, y + 2, z + 1), randomGrid(x, y + 2, z + 1), randomGrid(x + 1, y + 2, z + 1), randomGrid(x + 2, y + 2, z + 1), u);
+	float x33 = cubic(randomGrid(x - 1, y + 2, z + 2), randomGrid(x, y + 2, z + 2), randomGrid(x + 1, y + 2, z + 2), randomGrid(x + 2, y + 2, z + 2), u);
 
 	// interpolate along y
 	float y0 = cubic(x00, x10, x20, x30, v);
@@ -177,7 +175,7 @@ __device__ float discreteNoise(float3 pos, float scale, int seed)
 	int iy = (int)(pos.y * scale);
 	int iz = (int)(pos.z * scale);
 
-	return rf(ix, iy, iz, seed);
+	return randomGrid(ix, iy, iz, seed);
 }
 
 __device__ float linearValue(float3 pos, float scale, int seed)
@@ -191,14 +189,14 @@ __device__ float linearValue(float3 pos, float scale, int seed)
 	float w = pos.z - iz;
 
 	// Corner values
-	float a000 = rf(ix, iy, iz, seed);
-	float a100 = rf(ix + 1, iy, iz, seed);
-	float a010 = rf(ix, iy + 1, iz, seed);
-	float a110 = rf(ix + 1, iy + 1, iz, seed);
-	float a001 = rf(ix, iy, iz + 1, seed);
-	float a101 = rf(ix + 1, iy, iz + 1, seed);
-	float a011 = rf(ix, iy + 1, iz + 1, seed);
-	float a111 = rf(ix + 1, iy + 1, iz + 1, seed);
+	float a000 = randomGrid(ix, iy, iz, seed);
+	float a100 = randomGrid(ix + 1, iy, iz, seed);
+	float a010 = randomGrid(ix, iy + 1, iz, seed);
+	float a110 = randomGrid(ix + 1, iy + 1, iz, seed);
+	float a001 = randomGrid(ix, iy, iz + 1, seed);
+	float a101 = randomGrid(ix + 1, iy, iz + 1, seed);
+	float a011 = randomGrid(ix, iy + 1, iz + 1, seed);
+	float a111 = randomGrid(ix + 1, iy + 1, iz + 1, seed);
 
 	// Linear interpolation
 	float x00 = lerp(a000, a100, u);
@@ -223,14 +221,14 @@ __device__ float fadedValue(float3 pos, float scale, int seed)
 	float w = fade(pos.z - iz);
 
 	// Corner values
-	float a000 = rf(ix, iy, iz);
-	float a100 = rf(ix + 1, iy, iz);
-	float a010 = rf(ix, iy + 1, iz);
-	float a110 = rf(ix + 1, iy + 1, iz);
-	float a001 = rf(ix, iy, iz + 1);
-	float a101 = rf(ix + 1, iy, iz + 1);
-	float a011 = rf(ix, iy + 1, iz + 1);
-	float a111 = rf(ix + 1, iy + 1, iz + 1);
+	float a000 = randomGrid(ix, iy, iz);
+	float a100 = randomGrid(ix + 1, iy, iz);
+	float a010 = randomGrid(ix, iy + 1, iz);
+	float a110 = randomGrid(ix + 1, iy + 1, iz);
+	float a001 = randomGrid(ix, iy, iz + 1);
+	float a101 = randomGrid(ix + 1, iy, iz + 1);
+	float a011 = randomGrid(ix, iy + 1, iz + 1);
+	float a111 = randomGrid(ix + 1, iy + 1, iz + 1);
 
 	// Linear interpolation
 	float x00 = lerp(a000, a100, u);
@@ -283,14 +281,14 @@ __device__ float perlinNoise(float3 pos, float scale, int seed)
 	float w = fade(pos.z);
 
 	// influence values
-	float i000 = grad(ri(ix, iy, iz, seed), pos.x, pos.y, pos.z);
-	float i100 = grad(ri(ix + 1, iy, iz, seed), pos.x - 1.0f, pos.y, pos.z);
-	float i010 = grad(ri(ix, iy + 1, iz, seed), pos.x, pos.y - 1.0f, pos.z);
-	float i110 = grad(ri(ix + 1, iy + 1, iz, seed), pos.x - 1.0f, pos.y - 1.0f, pos.z);
-	float i001 = grad(ri(ix, iy, iz + 1, seed), pos.x, pos.y, pos.z - 1.0f);
-	float i101 = grad(ri(ix + 1, iy, iz + 1, seed), pos.x - 1.0f, pos.y, pos.z - 1.0f);
-	float i011 = grad(ri(ix, iy + 1, iz + 1, seed), pos.x, pos.y - 1.0f, pos.z - 1.0f);
-	float i111 = grad(ri(ix + 1, iy + 1, iz + 1, seed), pos.x - 1.0f, pos.y - 1.0f, pos.z - 1.0f);
+	float i000 = grad(randomIntGrid(ix, iy, iz, seed), pos.x, pos.y, pos.z);
+	float i100 = grad(randomIntGrid(ix + 1, iy, iz, seed), pos.x - 1.0f, pos.y, pos.z);
+	float i010 = grad(randomIntGrid(ix, iy + 1, iz, seed), pos.x, pos.y - 1.0f, pos.z);
+	float i110 = grad(randomIntGrid(ix + 1, iy + 1, iz, seed), pos.x - 1.0f, pos.y - 1.0f, pos.z);
+	float i001 = grad(randomIntGrid(ix, iy, iz + 1, seed), pos.x, pos.y, pos.z - 1.0f);
+	float i101 = grad(randomIntGrid(ix + 1, iy, iz + 1, seed), pos.x - 1.0f, pos.y, pos.z - 1.0f);
+	float i011 = grad(randomIntGrid(ix, iy + 1, iz + 1, seed), pos.x, pos.y - 1.0f, pos.z - 1.0f);
+	float i111 = grad(randomIntGrid(ix + 1, iy + 1, iz + 1, seed), pos.x - 1.0f, pos.y - 1.0f, pos.z - 1.0f);
 
 	// interpolation
 	float x00 = lerp(i000, i100, u);
@@ -306,7 +304,7 @@ __device__ float perlinNoise(float3 pos, float scale, int seed)
 	return avg;
 }
 
-__device__ float repeater(float3 pos, float scale, int seed, int n, float harmonic, float decay, basisFunction basis)
+__device__ float repeater(float3 pos, float scale, int seed, int n, float lacunarity, float decay, basisFunction basis)
 {
 	float acc = 0.0f;
 	float amp = 1.0f;
@@ -332,7 +330,7 @@ __device__ float repeater(float3 pos, float scale, int seed, int n, float harmon
 			break;
 		}
 
-		scale *= harmonic;
+		scale *= lacunarity;
 		amp *= decay;
 	}
 

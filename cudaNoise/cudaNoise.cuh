@@ -11,11 +11,11 @@ typedef enum { CUDANOISE_CHECKER,
 
 // Utility functions
 __device__ unsigned int hash(unsigned int a);
-__device__ float getRandomValue(unsigned int seed);
+__device__ float randomFloat(unsigned int seed);
 __device__ float clamp(float val, float min, float max);
 __device__ float mapToSigned(float input);
 __device__ float mapToUnsigned(float input);
-__device__ float rf(int x, int y, int z, int seed);
+__device__ float randomGrid(int x, int y, int z, int seed);
 
 // Vector operations
 __device__ float3 scaleVector(float3 v, float factor);

@@ -40,9 +40,9 @@ __global__ void kernel(uchar4 *ptr, float zoomFactor, int samples, int seed)
 
 	for (int i = 0; i < samples; i++)
 	{
-		float dx = getRandomValue(327482 + i * 2347 + seed)  / (float)DIM * zoomFactor - 0.5f;
-		float dy = getRandomValue(912472 + i * 118438 + seed)  / (float)DIM * zoomFactor - 0.5f;
-		float dz = getRandomValue(112348 + i * 68214 + seed)  / (float)DIM * zoomFactor - 0.5f;
+		float dx = randomFloat(327482 + i * 2347 + seed)  / (float)DIM * zoomFactor - 0.5f;
+		float dy = randomFloat(912472 + i * 118438 + seed)  / (float)DIM * zoomFactor - 0.5f;
+		float dz = randomFloat(112348 + i * 68214 + seed)  / (float)DIM * zoomFactor - 0.5f;
 
 		float3 ditheredPos = make_float3(pos.x + dx, pos.y + dy, pos.z + dz);
 
