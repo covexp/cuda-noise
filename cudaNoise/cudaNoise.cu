@@ -169,7 +169,6 @@ __device__ float tricubic(int x, int y, int z, float u, float v, float w)
 
 	// interpolate along z
 	return cubic(y0, y1, y2, y3, w);
-
 }
 
 __device__ float discreteNoise(float3 pos, float scale, int seed)
@@ -393,11 +392,11 @@ __device__ float turbulence(float3 pos, float scaleIn, float scaleOut, int seed,
 	return 0.0f;
 }
 
-__device__ float repeaterTurbulence(float3 pos, float strength, int n)
+__device__ float repeaterTurbulence(float3 pos, float scaleIn, float scaleOut, int seed, float strength, int n, basisFunction basisIn, basisFunction basisOut)
 {
-	pos.x += (repeater(make_float3(pos.x, pos.y, pos.z), 1.0f, 0, n, 1.0f, 0, CUDANOISE_PERLIN)) * strength;
+	pos.x += (repeater(make_float3(pos.x, pos.y, pos.z), scaleIn, seed, n, 2.0f, 0.5f, basisIn)) * strength;
 
-	return repeater(pos, 1.0f, 0, n, 1.0f, 0, CUDANOISE_PERLIN);
+	return repeater(pos, scaleOut, seed, n, 2.0f, 0.75f, basisOut);
 }
 
 __device__ float recursiveTurbulence(float3 pos, int n, float harmonic, float decay, float strength)

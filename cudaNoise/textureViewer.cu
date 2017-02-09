@@ -1,6 +1,5 @@
 // textureViewer
-// Simple GL texture viewer to preview 2D slices of textures produced
-// by cuda noise
+// Simple GL texture viewer to preview 2D slices of textures produced by cuda noise
 
 #define GL_GLEXT_PROTOTYPES
 #include <glut.h>
@@ -20,7 +19,7 @@ dim3 blocks(DIM / 16, DIM / 16);
 dim3 threads(16, 16);
 
 float zoom = 16.0f;
-int genSeed = 42;
+int genSeed = 0;
 
 GLuint bufferObj;
 cudaGraphicsResource *resource;
@@ -52,15 +51,14 @@ __global__ void kernel(uchar4 *ptr, float zoomFactor, int samples, int seed)
 //		float val = linearValue(ditheredPos, 1.0f, seed);
 //		float val = perlinNoise(ditheredPos, 1.0f, seed);
 //		float val = repeater(ditheredPos, 1.0f, seed, 2, 2.0f, 0.5f, CUDANOISE_PERLIN);
-		float val = turbulence(ditheredPos, 4.0f, 1.0f, seed, 0.2f, CUDANOISE_PERLIN, CUDANOISE_CHECKER);
-//		float val = repeaterTurbulence(ditheredPos, 50.5f, 16);
+//		float val = turbulence(ditheredPos, 4.0f, 1.0f, seed, 0.2f, CUDANOISE_PERLIN, CUDANOISE_CHECKER);
+		float val = repeaterTurbulence(ditheredPos, 0.2f, 1.0f, seed, 0.8f, 32, CUDANOISE_PERLIN, CUDANOISE_PERLIN);
 //		float val = recursiveTurbulence(ditheredPos, 3, 2.0f, 0.5f, 1.0f);
 //		float val = cubicValue(ditheredPos, 1.0f);
 //		float val = fadedValue(ditheredPos, 1.0f);
 
 		acc += val;
 	}
-
 
 	acc /= (float)samples;
 
