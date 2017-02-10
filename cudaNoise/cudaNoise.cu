@@ -168,10 +168,7 @@ __device__ float spots(float3 pos, float scale, int seed, float size, int minNum
 		{
 			for (int z = -1; z < 2; z++)
 			{
-
-
 				int numSpots = randomIntRange(minNum, maxNum, seed + (ix + x) * 823746 + (iy + y) * 12306 + (iz + z) * 823452 + 3234874);
-				numSpots = 1;
 
 				for (int i = 0; i < numSpots; i++)
 				{
