@@ -201,50 +201,6 @@ __device__ float spots(float3 pos, float scale, int seed, float size, int minNum
 	return val;
 }
 
-__device__ float spotsOld(float3 pos, float scale, int seed, float size, int minNum, int maxNum, float jitter, profileShape shape)
-{
-	if (size < EPSILON)
-		return 0.0f;
-
-	int ix = (int)(pos.x * scale);
-	int iy = (int)(pos.y * scale);
-	int iz = (int)(pos.z * scale);
-
-	float u = pos.x - (float)ix;
-	float v = pos.y - (float)iy;
-	float w = pos.z - (float)iz;
-
-	int numSpots = randomIntRange(minNum, maxNum, seed + ix * 823746 + iy * 12306 + iz * 823452 + 3234874);
-
-	float val = -1.0f;
-
-	for (int i = 0; i < numSpots; i++)
-	{
-		float distU = 0.5f - u + randomFloat(seed + ix * 23784 + iy * 9183 + iz * 23874 + 334 * i + 27432) * jitter - jitter / 2.0f;
-		float distV = 0.5f - v + randomFloat(seed + ix * 12743 + iy * 45191 + iz * 144421 + 2934 * i + 76671) * jitter - jitter / 2.0f;
-		float distW = 0.5f - w + randomFloat(seed + ix * 82734 + iy * 900213 + iz * 443241 + 18237 * i + 199823) * jitter - jitter / 2.0f;
-		float distanceSq = distU * distU + distV * distV + distW * distW;
-
-		switch (shape)
-		{
-		case(CUDANOISE_STEP):
-			if (distanceSq < size)
-				val = fmaxf(val, 1.0f);
-			else
-				val = -1.0f;
-			break;
-		case(CUDANOISE_LINEAR):
-			val = fmaxf(val, sqrtf(distanceSq));
-			break;
-		case(CUDANOISE_QUADRATIC):
-			val = fmaxf(val, 1.0f - clamp(distanceSq, 0.0f, size) / size);
-			break;
-		}
-	}
-
-	return val;
-}
-
 __device__ float tricubic(int x, int y, int z, float u, float v, float w)
 {
 	// interpolate along x first
