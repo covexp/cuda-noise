@@ -184,10 +184,11 @@ __device__ float spots(float3 pos, float scale, int seed, float size, int minNum
 						if (distanceSq < size)
 							val = fmaxf(val, 1.0f);
 						else
-							val = -1.0f;
+							val = fmaxf(val, -1.0f);
 						break;
 					case(CUDANOISE_LINEAR):
-						val = fmaxf(val, sqrtf(distanceSq));
+						float distanceAbs = fabsf(distU) + fabsf(distV) + fabsf(distW);
+						val = fmaxf(val, 1.0f - clamp(distanceAbs, 0.0f, size) / size);
 						break;
 					case(CUDANOISE_QUADRATIC):
 						val = fmaxf(val, 1.0f - clamp(distanceSq, 0.0f, size) / size);

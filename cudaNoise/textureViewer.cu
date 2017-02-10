@@ -56,7 +56,7 @@ __global__ void kernel(uchar4 *ptr, float zoomFactor, int samples, int seed)
 //		float val = recursiveTurbulence(ditheredPos, 3, 2.0f, 0.5f, 1.0f);
 //		float val = cubicValue(ditheredPos, 1.0f);
 //		float val = fadedValue(ditheredPos, 1.0f);
-		float val = spots(ditheredPos, 1.0f, seed, 0.1f, 0, 4, 1.0f, CUDANOISE_QUADRATIC);
+		float val = spots(ditheredPos, 1.0f, seed, 0.1f, 0, 4, 1.0f, CUDANOISE_STEP);
 
 		acc += val;
 	}
