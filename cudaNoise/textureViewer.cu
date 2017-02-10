@@ -56,7 +56,7 @@ __global__ void kernel(uchar4 *ptr, float zoomFactor, int samples, int seed)
 //		float val = recursiveTurbulence(ditheredPos, 3, 2.0f, 0.5f, 1.0f);
 //		float val = cubicValue(ditheredPos, 1.0f);
 //		float val = fadedValue(ditheredPos, 1.0f);
-		float val = spots(ditheredPos, 1.0f, seed, 0.03f, 0, 1, 0.3f, CUDANOISE_PARABOLIC);
+		float val = spots(ditheredPos, 1.0f, seed, 0.1f, 0, 16, 1.0f, CUDANOISE_QUADRATIC);
 
 		acc += val;
 	}
@@ -84,7 +84,7 @@ void redrawTexture()
 	time_t startTime = clock();
 
 	cudaGraphicsMapResources(1, &resource, NULL);
-	kernel << < blocks, threads >> > (devPtr, zoom *= 1.0001f, 1, genSeed);	
+	kernel << < blocks, threads >> > (devPtr, zoom *= 1.0001f, 4, genSeed);	
 	cudaDeviceSynchronize();
 	cudaGraphicsUnmapResources(1, &resource, NULL);
 

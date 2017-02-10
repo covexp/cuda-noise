@@ -7,19 +7,19 @@
 #include <cuda_runtime.h>
 #include "cudanoise.cuh"
 
-__device__ unsigned int hash(unsigned int a)
+__device__ unsigned int hash(unsigned int seed)
 {
-	a = (a + 0x7ed55d16) + (a << 12);
-	a = (a ^ 0xc761c23c) ^ (a >> 19);
-	a = (a + 0x165667b1) + (a << 5);
-	a = (a + 0xd3a2646c) ^ (a << 9);
-	a = (a + 0xfd7046c5) + (a << 3);
-	a = (a ^ 0xb55a4f09) ^ (a >> 16);
+	seed = (seed + 0x7ed55d16) + (seed << 12);
+	seed = (seed ^ 0xc761c23c) ^ (seed >> 19);
+	seed = (seed + 0x165667b1) + (seed << 5);
+	seed = (seed + 0xd3a2646c) ^ (seed << 9);
+	seed = (seed + 0xfd7046c5) + (seed << 3);
+	seed = (seed ^ 0xb55a4f09) ^ (seed >> 16);
 
-	return a;
+	return seed;
 }
 
-__device__ int randomRange(int min, int max, int seed)
+__device__ int randomIntRange(int min, int max, int seed)
 {
 	int base = hash(seed);
 	base = base % (1 + max - min) + min;
@@ -159,7 +159,65 @@ __device__ float spots(float3 pos, float scale, int seed, float size, int minNum
 	float v = pos.y - (float)iy;
 	float w = pos.z - (float)iz;
 
-	int numSpots = randomRange(minNum, maxNum, seed + ix * 823746 + iy * 12306 + iz * 823452 + 3234874);
+	float val = -1.0f;
+
+	// We need to traverse the entire 3x3x3 neighborhood in case there are spots in neighbors near the edges of the cell
+	for (int x = -1; x < 2; x++)
+	{
+		for (int y = -1; y < 2; y++)
+		{
+			for (int z = -1; z < 2; z++)
+			{
+
+
+				int numSpots = randomIntRange(minNum, maxNum, seed + (ix + x) * 823746 + (iy + y) * 12306 + (iz + z) * 823452 + 3234874);
+				numSpots = 1;
+
+				for (int i = 0; i < numSpots; i++)
+				{
+					float distU = u - x - (randomFloat(seed + (ix + x) * 23784 + (iy + y) * 9183 + (iz + z) * 23874 + 334 * i + 27432) * jitter - jitter / 2.0f);
+					float distV = v - y - (randomFloat(seed + (ix + x) * 12743 + (iy + y) * 45191 + (iz + z) * 144421 + 2934 * i + 76671) * jitter - jitter / 2.0f);
+					float distW = w - z - (randomFloat(seed + (ix + x) * 82734 + (iy + y) * 900213 + (iz + z) * 443241 + 18237 * i + 199823) * jitter - jitter / 2.0f);
+
+					float distanceSq = distU * distU + distV * distV + distW * distW;
+
+					switch (shape)
+					{
+					case(CUDANOISE_STEP):
+						if (distanceSq < size)
+							val = fmaxf(val, 1.0f);
+						else
+							val = -1.0f;
+						break;
+					case(CUDANOISE_LINEAR):
+						val = fmaxf(val, sqrtf(distanceSq));
+						break;
+					case(CUDANOISE_QUADRATIC):
+						val = fmaxf(val, 1.0f - clamp(distanceSq, 0.0f, size) / size);
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	return val;
+}
+
+__device__ float spotsOld(float3 pos, float scale, int seed, float size, int minNum, int maxNum, float jitter, profileShape shape)
+{
+	if (size < EPSILON)
+		return 0.0f;
+
+	int ix = (int)(pos.x * scale);
+	int iy = (int)(pos.y * scale);
+	int iz = (int)(pos.z * scale);
+
+	float u = pos.x - (float)ix;
+	float v = pos.y - (float)iy;
+	float w = pos.z - (float)iz;
+
+	int numSpots = randomIntRange(minNum, maxNum, seed + ix * 823746 + iy * 12306 + iz * 823452 + 3234874);
 
 	float val = -1.0f;
 
@@ -179,9 +237,9 @@ __device__ float spots(float3 pos, float scale, int seed, float size, int minNum
 				val = -1.0f;
 			break;
 		case(CUDANOISE_LINEAR):
-			val = fmaxf(val, fabsf(distU) + fabsf(distV) + fabsf(distW));
+			val = fmaxf(val, sqrtf(distanceSq));
 			break;
-		case(CUDANOISE_PARABOLIC):
+		case(CUDANOISE_QUADRATIC):
 			val = fmaxf(val, 1.0f - clamp(distanceSq, 0.0f, size) / size);
 			break;
 		}

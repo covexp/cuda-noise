@@ -11,7 +11,7 @@ typedef enum { CUDANOISE_CHECKER,
 
 typedef enum { CUDANOISE_STEP, 
 			   CUDANOISE_LINEAR, 
-			   CUDANOISE_PARABOLIC
+			   CUDANOISE_QUADRATIC
 			 } profileShape;
 
 #define EPSILON 0.000000001f
