@@ -48,6 +48,7 @@ __device__ float cubicValue(float3 pos, float scale, int seed);
 __device__ float linearValue(float3 pos, float scale, int seed);
 __device__ float fadedValue(float3 pos, float scale, int seed);
 __device__ float perlinNoise(float3 pos, float scale, int seed);
+__device__ float repeaterPerlin(float3 pos, float scale, int seed, int n, float lacunarity, float decay);
 __device__ float repeater(float3 pos, float scale, int seed, int n, float harmonic, float decay, basisFunction basis);
 __device__ float turbulence(float3 pos, float scaleIn, float scaleOut, int seed, float strength, basisFunction inFunc, basisFunction outFunc);
 __device__ float repeaterTurbulence(float3 pos, float scaleIn, float scaleOut, int seed, float strength, int n, basisFunction basisIn, basisFunction basisOut);

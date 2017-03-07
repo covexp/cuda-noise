@@ -219,10 +219,6 @@ __device__ float simplexNoise(float3 pos, float scale, int seed)
 	int ii = i & 255;
 	int jj = j & 255;
 	int kk = k & 255;
-//	int gi0 = permMod12[ii + perm[jj + perm[kk]]];
-//	int gi1 = permMod12[ii + i1 + perm[jj + j1 + perm[kk + k1]]];
-//	int gi2 = permMod12[ii + i2 + perm[jj + j2 + perm[kk + k2]]];
-//	int gi3 = permMod12[ii + 1 + perm[jj + 1 + perm[kk + 1]]];
 	int gi0 = calcPerm12(ii + calcPerm(jj + calcPerm(kk)));
 	int gi1 = calcPerm12(ii + i1 + calcPerm(jj + j1 + calcPerm(kk + k1)));
 	int gi2 = calcPerm12(ii + i2 + calcPerm(jj + j2 + calcPerm(kk + k2)));
@@ -493,6 +489,21 @@ __device__ float perlinNoise(float3 pos, float scale, int seed)
 	float avg = lerp(y0, y1, w);
 
 	return avg;
+}
+
+__device__ float repeaterPerlin(float3 pos, float scale, int seed, int n, float lacunarity, float decay)
+{
+	float acc = 0.0f;
+	float amp = 1.0f;
+
+	for (int i = 0; i < n; i++)
+	{
+		acc += perlinNoise(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed) * amp;
+		scale *= lacunarity;
+		amp *= decay;
+	}
+
+	return acc;
 }
 
 __device__ float repeater(float3 pos, float scale, int seed, int n, float lacunarity, float decay, basisFunction basis)
