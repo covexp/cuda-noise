@@ -33,6 +33,9 @@ __global__ void kernel(uchar4 *ptr, float zoomFactor, int samples, int seed)
 	float fx = x / (float)DIM;
 	float fy = y / (float)DIM;
 
+	fx += 23409.3284f;
+	fy += 19482.8435f;
+
 	float3 pos = make_float3(fx, fy, 0.5f);
 	pos = scaleVector(pos, zoomFactor);
 
@@ -85,7 +88,7 @@ void redrawTexture()
 	time_t startTime = clock();
 
 	cudaGraphicsMapResources(1, &resource, NULL);
-	kernel << < blocks, threads >> > (devPtr, zoom *= 1.0001f, 4, genSeed);	
+	kernel << < blocks, threads >> > (devPtr, zoom *= 1.0001f, 32, genSeed);	
 	cudaDeviceSynchronize();
 	cudaGraphicsUnmapResources(1, &resource, NULL);
 
@@ -93,7 +96,6 @@ void redrawTexture()
 
 	double time_spent = (double)(endTime - startTime) / CLOCKS_PER_SEC;
 
-//	std::cout << "Time taken: " << time_spent << std::endl;
 	printf("Time spent: %f\n", time_spent);
 
 	glutPostRedisplay();

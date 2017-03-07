@@ -151,8 +151,9 @@ __device__ short int calcPerm12(int p)
 	return (short int)(hash(p) % 12);
 }
 
+// Noise functions
+
 // Simplex noise adapted from Java code by Stefan Gustafson and Peter Eastman
-// SLOW AND EXPERIMENTAL
 __device__ float simplexNoise(float3 pos, float scale, int seed)
 {
 	float xin = pos.x * scale;
@@ -257,32 +258,6 @@ __device__ float simplexNoise(float3 pos, float scale, int seed)
 	// The result is scaled to stay just inside [-1,1]
 	return 32.0*(n0 + n1 + n2 + n3);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//       EXPERIMENTAL SIMPLEX NOISE END
-//       EXPERIMENTAL SIMPLEX NOISE END END
-//       EXPERIMENTAL SIMPLEX NOISE END
-//       EXPERIMENTAL SIMPLEX NOISE END
-//       EXPERIMENTAL SIMPLEX NOISE END END
-//       EXPERIMENTAL SIMPLEX NOISE END
-//       EXPERIMENTAL SIMPLEX NOISE END
-
-// Noise functions
 
 __device__ float checker(float3 pos, float scale, int seed)
 {
