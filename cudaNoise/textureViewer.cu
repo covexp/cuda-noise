@@ -55,7 +55,8 @@ __global__ void kernel(uchar4 *ptr, float zoomFactor, int samples, int seed)
 //		float val = perlinNoise(ditheredPos, 1.0f, seed);
 //		float val = simplexNoise(ditheredPos, 1.0f, seed);
 //		float val = repeater(ditheredPos, 1.0f, seed, 16, 2.0f, 0.5f, CUDANOISE_PERLIN);
-		float val = repeaterPerlin(ditheredPos, 1.0f, seed, 16, 2.0f, 0.5f);
+//		float val = repeaterPerlin(ditheredPos, 1.0f, seed, 16, 2.0f, 0.5f);
+		float val = repeaterSimplex(ditheredPos, 1.0f, seed, 16, 2.0f, 0.5f);
 //		float val = turbulence(ditheredPos, 4.0f, 1.0f, seed, 0.2f, CUDANOISE_PERLIN, CUDANOISE_CHECKER);
 //		float val = repeaterTurbulence(ditheredPos, 0.2f, 1.0f, seed, 0.8f, 32, CUDANOISE_PERLIN, CUDANOISE_PERLIN);
 //		float val = recursiveTurbulence(ditheredPos, 3, 2.0f, 0.5f, 1.0f);

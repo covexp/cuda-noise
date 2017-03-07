@@ -151,6 +151,26 @@ __device__ short int calcPerm12(int p)
 	return (short int)(hash(p) % 12);
 }
 
+__device__ float3 calcGrad(int t)
+{
+	switch (t % 12)
+	{
+	case 0: return make_float3(1, 1, 0);
+	case 1: return make_float3(-1, 1, 0);
+	case 2: return make_float3(1, -1, 0);
+	case 3: return make_float3(-1, -1, 0);
+	case 4: return make_float3(1, 0, 1);
+	case 5: return make_float3(-1, 0, 1);
+	case 6: return make_float3(1, 0, -1);
+	case 7: return make_float3(-1, 0, -1);
+	case 8: return make_float3(0, 1, 1);
+	case 9: return make_float3(0, -1, 1);
+	case 10: return make_float3(0, 1, -1);
+	case 11: return make_float3(0, -1, -1);
+	default: return make_float3(0, 0, 0); // never happens
+	}
+}
+
 // Noise functions
 
 // Simplex noise adapted from Java code by Stefan Gustafson and Peter Eastman
@@ -160,10 +180,10 @@ __device__ float simplexNoise(float3 pos, float scale, int seed)
 	float yin = pos.y * scale;
 	float zin = pos.z * scale;
 
-	float3 grad3[] = { make_float3(1,1,0), make_float3(-1,1,0), make_float3(1,-1,0), make_float3(-1,-1,0),
+/*	float3 grad3[] = { make_float3(1,1,0), make_float3(-1,1,0), make_float3(1,-1,0), make_float3(-1,-1,0),
 		make_float3(1,0,1), make_float3(-1,0,1), make_float3(1,0,-1), make_float3(-1,0,-1),
 		make_float3(0,1,1), make_float3(0,-1,1), make_float3(0,1,-1), make_float3(0,-1,-1) };
-
+		*/
 	// Skewing and unskewing factors for 2, 3, and 4 dimensions
 	float F3 = 1.0 / 3.0;
 	float G3 = 1.0 / 6.0;
@@ -229,25 +249,25 @@ __device__ float simplexNoise(float3 pos, float scale, int seed)
 	if (t0<0) n0 = 0.0;
 	else {
 		t0 *= t0;
-		n0 = t0 * t0 * dot(grad3[gi0], x0, y0, z0);
+		n0 = t0 * t0 * dot(calcGrad(gi0), x0, y0, z0);
 	}
 	float t1 = 0.6 - x1*x1 - y1*y1 - z1*z1;
 	if (t1<0) n1 = 0.0;
 	else {
 		t1 *= t1;
-		n1 = t1 * t1 * dot(grad3[gi1], x1, y1, z1);
+		n1 = t1 * t1 * dot(calcGrad(gi1), x1, y1, z1);
 	}
 	float t2 = 0.6 - x2*x2 - y2*y2 - z2*z2;
 	if (t2<0) n2 = 0.0;
 	else {
 		t2 *= t2;
-		n2 = t2 * t2 * dot(grad3[gi2], x2, y2, z2);
+		n2 = t2 * t2 * dot(calcGrad(gi2), x2, y2, z2);
 	}
 	float t3 = 0.6 - x3*x3 - y3*y3 - z3*z3;
 	if (t3<0) n3 = 0.0;
 	else {
 		t3 *= t3;
-		n3 = t3 * t3 * dot(grad3[gi3], x3, y3, z3);
+		n3 = t3 * t3 * dot(calcGrad(gi3), x3, y3, z3);
 	}
 
 	// Add contributions from each corner to get the final noise value.
@@ -491,6 +511,8 @@ __device__ float perlinNoise(float3 pos, float scale, int seed)
 	return avg;
 }
 
+// Derived noise functions
+
 __device__ float repeaterPerlin(float3 pos, float scale, int seed, int n, float lacunarity, float decay)
 {
 	float acc = 0.0f;
@@ -499,6 +521,21 @@ __device__ float repeaterPerlin(float3 pos, float scale, int seed, int n, float 
 	for (int i = 0; i < n; i++)
 	{
 		acc += perlinNoise(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed) * amp;
+		scale *= lacunarity;
+		amp *= decay;
+	}
+
+	return acc;
+}
+
+__device__ float repeaterSimplex(float3 pos, float scale, int seed, int n, float lacunarity, float decay)
+{
+	float acc = 0.0f;
+	float amp = 1.0f;
+
+	for (int i = 0; i < n; i++)
+	{
+		acc += simplexNoise(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed) * amp;
 		scale *= lacunarity;
 		amp *= decay;
 	}
