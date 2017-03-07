@@ -137,8 +137,12 @@ __device__ int fastfloor(double x) {
 	return x<xi ? xi - 1 : xi;
 }
 
-__device__  float dot(float3 g, float x, float y, float z) {
+__device__  float OLD_dot(float3 g, float x, float y, float z) {
 	return g.x*x + g.y*y + g.z*z;
+}
+
+__device__  float dot(float g[3], float x, float y, float z) {
+	return g[0]*x + g[1]*y + g[2]*z;
 }
 
 __device__ short int calcPerm(int p)
@@ -170,6 +174,10 @@ __device__ float3 calcGrad(int t)
 	default: return make_float3(0, 0, 0); // never happens
 	}
 }
+
+__constant__ float gradMap[12][3] = { {1, 1, 0}, {-1, 1, 0}, {1, -1, 0}, {-1, -1, 0},
+									  {1, 0, 1}, {-1, 0, 1}, {1, 0, -1}, {-1, 0, -1},
+									  {0, 1, 1}, {0, -1, 1}, {0, 1, -1}, {0, -1, -1} };
 
 // Noise functions
 
@@ -249,25 +257,29 @@ __device__ float simplexNoise(float3 pos, float scale, int seed)
 	if (t0<0) n0 = 0.0;
 	else {
 		t0 *= t0;
-		n0 = t0 * t0 * dot(calcGrad(gi0), x0, y0, z0);
+//		n0 = t0 * t0 * dot(calcGrad(gi0), x0, y0, z0);
+		n0 = t0 * t0 * dot(gradMap[gi0], x0, y0, z0);
 	}
 	float t1 = 0.6 - x1*x1 - y1*y1 - z1*z1;
 	if (t1<0) n1 = 0.0;
 	else {
 		t1 *= t1;
-		n1 = t1 * t1 * dot(calcGrad(gi1), x1, y1, z1);
+//		n1 = t1 * t1 * dot(calcGrad(gi1), x1, y1, z1);
+		n1 = t1 * t1 * dot(gradMap[gi1], x1, y1, z1);
 	}
 	float t2 = 0.6 - x2*x2 - y2*y2 - z2*z2;
 	if (t2<0) n2 = 0.0;
 	else {
 		t2 *= t2;
-		n2 = t2 * t2 * dot(calcGrad(gi2), x2, y2, z2);
+//		n2 = t2 * t2 * dot(calcGrad(gi2), x2, y2, z2);
+		n2 = t2 * t2 * dot(gradMap[gi2], x2, y2, z2);
 	}
 	float t3 = 0.6 - x3*x3 - y3*y3 - z3*z3;
 	if (t3<0) n3 = 0.0;
 	else {
 		t3 *= t3;
-		n3 = t3 * t3 * dot(calcGrad(gi3), x3, y3, z3);
+//		n3 = t3 * t3 * dot(calcGrad(gi3), x3, y3, z3);
+		n3 = t3 * t3 * dot(gradMap[gi3], x3, y3, z3);
 	}
 
 	// Add contributions from each corner to get the final noise value.
