@@ -31,8 +31,7 @@ __device__ float dotProduct(float3 u, float3 v);
 
 // Helper functions for noise
 __device__ float grad(int hash, float x, float y, float z);
-__device__ int fastfloor(double x);
-__device__ float dot(float3 g, float x, float y, float z);
+__device__ float dot(float g[3], float x, float y, float z);
 __device__ short int calcPerm(int p);
 __device__ short int calcPerm12(int p);
 __device__ float cubic(float p0, float p1, float p2, float p3, float x);
