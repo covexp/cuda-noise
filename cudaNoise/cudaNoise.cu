@@ -1,4 +1,4 @@
-// cudanoise
+// cudaNoise
 // Library of common 3D noise functions for CUDA kernels
 
 #define N 512
@@ -92,19 +92,19 @@ __device__ float mapToUnsigned(float input)
 // Random float for a grid coordinate [-1, 1]
 __device__ float randomGrid(int x, int y, int z, int seed = 0)
 {
-	return mapToSigned(randomFloat((unsigned int)(x * 1723 + y * 93241 + z * 149812 + 3824 + seed)));
+	return mapToSigned(randomFloat((unsigned int)(x * 1723.0f + y * 93241.0f + z * 149812.0f + 3824.0f + seed)));
 }
 
 // Random unsigned int for a grid coordinate [0, MAXUINT]
 __device__ unsigned int randomIntGrid(int x, int y, int z, int seed = 0)
 {
-	return hash((unsigned int)(x * 1723 + y * 93241 + z * 149812 + 3824 + seed));
+	return hash((unsigned int)(x * 1723.0f + y * 93241.0f + z * 149812.0f + 3824.0f + seed));
 }
 
 __device__ float3 vectorNoise(int x, int y, int z)
 {
-	return make_float3(randomFloat(x * 8231 + y * 34612 + z * 11836 + 19283) * 2.0f - 1.0f,
-		   			   randomFloat(x * 1171 + y * 9234 + z * 992903 + 1466) * 2.0f - 1.0f,
+	return make_float3(randomFloat(x * 8231.0f + y * 34612.0f + z * 11836.0f + 19283.0f) * 2.0f - 1.0f,
+		   			   randomFloat(x * 1171.0f + y * 9234.0f + z * 992903.0f + 1466.0f) * 2.0f - 1.0f,
 					   0.0f);
 }
 
@@ -132,7 +132,7 @@ __device__ float lerp(float a, float b, float ratio)
 
 __device__ float cubic(float p0, float p1, float p2, float p3, float x)
 {
-	return p1 + 0.5 * x * (p2 - p0 + x * (2.0 * p0 - 5.0 * p1 + 4.0 * p2 - p3 + x * (3.0 * (p1 - p2) + p3 - p0)));
+	return p1 + 0.5f * x * (p2 - p0 + x * (2.0f * p0 - 5.0f * p1 + 4.0f * p2 - p3 + x * (3.0f * (p1 - p2) + p3 - p0)));
 }
 
 __device__ float grad(int hash, float x, float y, float z)
@@ -173,7 +173,7 @@ __device__  float dot(float g[3], float x, float y, float z) {
 
 __device__ unsigned char calcPerm(int p)
 {
-	return (unsigned char)(hash(p) % 256);
+	return (unsigned char)(hash(p) % 512);
 }
 
 
@@ -281,7 +281,7 @@ __device__ float simplexNoise(float3 pos, float scale, int seed)
 
 	// Add contributions from each corner to get the final noise value.
 	// The result is scaled to stay just inside [-1,1]
-	return 32.0f*(n0 + n1 + n2 + n3);
+	return 24.0f*(n0 + n1 + n2 + n3);
 }
 
 __device__ float checker(float3 pos, float scale, int seed)
@@ -318,13 +318,13 @@ __device__ float spots(float3 pos, float scale, int seed, float size, int minNum
 		{
 			for (int z = -1; z < 2; z++)
 			{
-				int numSpots = randomIntRange(minNum, maxNum, seed + (ix + x) * 823746 + (iy + y) * 12306 + (iz + z) * 823452 + 3234874);
+				int numSpots = randomIntRange(minNum, maxNum, seed + (ix + x) * 823746.0f + (iy + y) * 12306.0f + (iz + z) * 823452.0f + 3234874.0f);
 
 				for (int i = 0; i < numSpots; i++)
 				{
-					float distU = u - x - (randomFloat(seed + (ix + x) * 23784 + (iy + y) * 9183 + (iz + z) * 23874 * i + 27432) * jitter - jitter / 2.0f);
-					float distV = v - y - (randomFloat(seed + (ix + x) * 12743 + (iy + y) * 45191 + (iz + z) * 144421 * i + 76671) * jitter - jitter / 2.0f);
-					float distW = w - z - (randomFloat(seed + (ix + x) * 82734 + (iy + y) * 900213 + (iz + z) * 443241 * i + 199823) * jitter - jitter / 2.0f);
+					float distU = u - x - (randomFloat(seed + (ix + x) * 23784.0f + (iy + y) * 9183.0f + (iz + z) * 23874.0f * i + 27432.0f) * jitter - jitter / 2.0f);
+					float distV = v - y - (randomFloat(seed + (ix + x) * 12743.0f + (iy + y) * 45191.0f + (iz + z) * 144421.0f * i + 76671.0f) * jitter - jitter / 2.0f);
+					float distW = w - z - (randomFloat(seed + (ix + x) * 82734.0f + (iy + y) * 900213.0f + (iz + z) * 443241.0f * i + 199823.0f) * jitter - jitter / 2.0f);
 
 					float distanceSq = distU * distU + distV * distV + distW * distW;
 

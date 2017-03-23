@@ -1,5 +1,6 @@
 // textureViewer
-// Simple GL texture viewer to preview 2D slices of textures produced by cuda noise
+// Example client for cudaNoise
+// Simple GL texture viewer to preview 2D slices of textures produced by cudaNoise
 
 #define GL_GLEXT_PROTOTYPES
 #include <glut.h>
@@ -33,9 +34,6 @@ __global__ void kernel(uchar4 *ptr, float zoomFactor, int samples, int seed)
 	float fx = x / (float)DIM;
 	float fy = y / (float)DIM;
 
-	fx += 23409.3284f;
-	fy += 19482.8435f;
-
 	float3 pos = make_float3(fx, fy, 0.5f);
 	pos = scaleVector(pos, zoomFactor);
 
@@ -43,20 +41,20 @@ __global__ void kernel(uchar4 *ptr, float zoomFactor, int samples, int seed)
 
 	for (int i = 0; i < samples; i++)
 	{
-		float dx = randomFloat(327482 + i * 2347 + seed)  / (float)DIM * zoomFactor - 0.5f;
-		float dy = randomFloat(912472 + i * 118438 + seed)  / (float)DIM * zoomFactor - 0.5f;
-		float dz = randomFloat(112348 + i * 68214 + seed)  / (float)DIM * zoomFactor - 0.5f;
+		float dx = randomFloat(327482 + i * 2347 + seed)  / (float)DIM * zoomFactor;
+		float dy = randomFloat(912472 + i * 118438 + seed)  / (float)DIM * zoomFactor;
+		float dz = randomFloat(112348 + i * 68214 + seed)  / (float)DIM * zoomFactor;
 
 		float3 ditheredPos = make_float3(pos.x + dx, pos.y + dy, pos.z + dz);
 
-//		float val = checker(fx, fy, 0.0f, 64.0f);
-//		float val = discreteNoise(ditheredPos, 1.0f, seed);
+//		float val = checker(ditheredPos, 1.0f, seed);
+		float val = discreteNoise(ditheredPos, 1.0f, 3478);
 //		float val = linearValue(ditheredPos, 1.0f, seed);
 //		float val = perlinNoise(ditheredPos, 1.0f, seed);
 //		float val = simplexNoise(ditheredPos, 1.0f, seed);
 //		float val = repeater(ditheredPos, 1.0f, seed, 16, 2.0f, 0.5f, CUDANOISE_PERLIN);
-//		float val = repeaterPerlin(ditheredPos, 1.0f, seed, 16, 2.0f, 0.5f);
-		float val = repeaterSimplex(ditheredPos, 1.0f, seed, 16, 2.0f, 0.5f);
+//		float val = repeaterPerlin(ditheredPos, 1.0f, seed, 16, 1.9f, 0.5f);
+//		float val = repeaterSimplex(ditheredPos, 1.0f, seed, 128, 1.5f, 0.8f);
 //		float val = turbulence(ditheredPos, 4.0f, 1.0f, seed, 0.2f, CUDANOISE_PERLIN, CUDANOISE_CHECKER);
 //		float val = repeaterTurbulence(ditheredPos, 0.2f, 1.0f, seed, 0.8f, 32, CUDANOISE_PERLIN, CUDANOISE_PERLIN);
 //		float val = recursiveTurbulence(ditheredPos, 3, 2.0f, 0.5f, 1.0f);
@@ -90,7 +88,7 @@ void redrawTexture()
 	time_t startTime = clock();
 
 	cudaGraphicsMapResources(1, &resource, NULL);
-	kernel << < blocks, threads >> > (devPtr, zoom *= 1.0001f, 32, genSeed);	
+	kernel << < blocks, threads >> > (devPtr, zoom, 1, genSeed);	
 	cudaDeviceSynchronize();
 	cudaGraphicsUnmapResources(1, &resource, NULL);
 
@@ -98,7 +96,7 @@ void redrawTexture()
 
 	double time_spent = (double)(endTime - startTime) / CLOCKS_PER_SEC;
 
-	printf("Time spent: %f\n", time_spent);
+	printf("Time spent: %f\r", time_spent);
 
 	glutPostRedisplay();
 }
