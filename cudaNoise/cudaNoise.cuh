@@ -6,9 +6,6 @@
 
 #include <cuda_runtime.h>
 
-#define N 512
-#define WORLDSIZE N * N
-
 // Basis functions
 typedef enum {
 	CUDANOISE_CHECKER,
