@@ -80,6 +80,10 @@
     <LibraryPath>D:\code\_packages\_lib;$(LibraryPath)</LibraryPath>
     <IncludePath>D:\code\_packages\_include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IncludePath>D:\code\_packages\_include;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\code\_packages\_lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>

@@ -4,9 +4,6 @@
 #ifndef cudanoise_cuh
 #define cudanoise_cuh
 
-// cudaNoise
-// Library of common 3D noise functions for CUDA kernels
-
 #define N 512
 #define WORLDSIZE N * N
 
@@ -21,6 +18,7 @@ typedef enum {
 	CUDANOISE_PERLIN
 } basisFunction;
 
+// Shaping functions
 typedef enum {
 	CUDANOISE_STEP,
 	CUDANOISE_LINEAR,
@@ -29,34 +27,7 @@ typedef enum {
 
 #define EPSILON 0.000000001f
 
-// Device constants for faster noise
-
-__device__ __constant__ unsigned char perm[512] = { 151,160,137,91,90,15,
-131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,
-190, 6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,
-88,237,149,56,87,174,20,125,136,171,168, 68,175,74,165,71,134,139,48,27,166,
-77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,
-102,143,54, 65,25,63,161, 1,216,80,73,209,76,132,187,208, 89,18,169,200,196,
-135,130,116,188,159,86,164,100,109,198,173,186, 3,64,52,217,226,250,124,123,
-5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,
-223,183,170,213,119,248,152, 2,44,154,163, 70,221,153,101,155,167, 43,172,9,
-129,22,39,253, 19,98,108,110,79,113,224,232,178,185, 112,104,218,246,97,228,
-251,34,242,193,238,210,144,12,191,179,162,241, 81,51,145,235,249,14,239,107,
-49,192,214, 31,181,199,106,157,184, 84,204,176,115,121,50,45,127, 4,150,254,
-138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180,
-151,160,137,91,90,15,
-131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,
-190, 6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,
-88,237,149,56,87,174,20,125,136,171,168, 68,175,74,165,71,134,139,48,27,166,
-77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,
-102,143,54, 65,25,63,161, 1,216,80,73,209,76,132,187,208, 89,18,169,200,196,
-135,130,116,188,159,86,164,100,109,198,173,186, 3,64,52,217,226,250,124,123,
-5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,
-223,183,170,213,119,248,152, 2,44,154,163, 70,221,153,101,155,167, 43,172,9,
-129,22,39,253, 19,98,108,110,79,113,224,232,178,185, 112,104,218,246,97,228,
-251,34,242,193,238,210,144,12,191,179,162,241, 81,51,145,235,249,14,239,107,
-49,192,214, 31,181,199,106,157,184, 84,204,176,115,121,50,45,127, 4,150,254,
-138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180 };
+// Device constants for noise
 
 __device__ __constant__ float gradMap[12][3] = { { 1.0f, 1.0f, 0.0f },{ -1.0f, 1.0f, 0.0f },{ 1.0f, -1.0f, 0.0f },{ -1.0f, -1.0f, 0.0f },
 { 1.0f, 0.0f, 1.0f },{ -1.0f, 0.0f, 1.0f },{ 1.0f, 0.0f, -1.0f },{ -1.0f, 0.0f, -1.0f },
@@ -64,6 +35,7 @@ __device__ __constant__ float gradMap[12][3] = { { 1.0f, 1.0f, 0.0f },{ -1.0f, 1
 
 // Utility functions
 
+// Hashing function (used for fast on-device pseudorandom numbers for randomness in noise)
 __device__ __forceinline__ unsigned int hash(unsigned int seed)
 {
 	seed = (seed + 0x7ed55d16) + (seed << 12);
@@ -76,6 +48,7 @@ __device__ __forceinline__ unsigned int hash(unsigned int seed)
 	return seed;
 }
 
+// Returns a random integer between [min, max]
 __device__ __forceinline__ int randomIntRange(int min, int max, int seed)
 {
 	int base = hash(seed);
@@ -84,6 +57,7 @@ __device__ __forceinline__ int randomIntRange(int min, int max, int seed)
 	return base;
 }
 
+// Returns a random float between [0, 1]
 __device__ __forceinline__ float randomFloat(unsigned int seed)
 {
 	unsigned int noiseVal = hash(seed);
@@ -91,6 +65,7 @@ __device__ __forceinline__ float randomFloat(unsigned int seed)
 	return ((float)noiseVal / (float)0xffffffff);
 }
 
+// Clamps val between [min, max]
 __device__ __forceinline__ float clamp(float val, float min, float max)
 {
 	if (val < 0.0f)
@@ -101,11 +76,15 @@ __device__ __forceinline__ float clamp(float val, float min, float max)
 	return val;
 }
 
+// Maps from the unsigned range [-1, 1] to signed [0, 1]
+// NOTE: no clamping
 __device__ __forceinline__ float mapToSigned(float input)
 {
 	return input * 2.0f - 1.0f;
 }
 
+// Maps from the signed range [0, 1] to unsigned [-1, 1]
+// NOTE: no clamping
 __device__ __forceinline__ float mapToUnsigned(float input)
 {
 	return input * 0.5f + 0.5f;
@@ -123,6 +102,7 @@ __device__ __forceinline__ unsigned int randomIntGrid(int x, int y, int z, int s
 	return hash((unsigned int)(x * 1723.0f + y * 93241.0f + z * 149812.0f + 3824.0f + seed));
 }
 
+// Random 3D vector as float3 from grid position
 __device__ __forceinline__ float3 vectorNoise(int x, int y, int z)
 {
 	return make_float3(randomFloat(x * 8231.0f + y * 34612.0f + z * 11836.0f + 19283.0f) * 2.0f - 1.0f,
@@ -130,16 +110,19 @@ __device__ __forceinline__ float3 vectorNoise(int x, int y, int z)
 		0.0f);
 }
 
+// Scale 3D vector by scalar value
 __device__ __forceinline__ float3 scaleVector(float3 v, float factor)
 {
 	return make_float3(v.x * factor, v.y * factor, v.z * factor);
 }
 
+// Adds two 3D vectors
 __device__ __forceinline__ float3 addVectors(float3 v, float3 w)
 {
 	return make_float3(v.x + w.x, v.y + w.y, v.z + w.z);
 }
 
+// Dot product between two vectors
 __device__ __forceinline__ float dotProduct(float3 u, float3 v)
 {
 	return (u.x * v.x + u.y * v.y + u.z * v.z);
@@ -147,16 +130,19 @@ __device__ __forceinline__ float dotProduct(float3 u, float3 v)
 
 // Helper functions for noise
 
+// Linearly interpolate between two float values
 __device__ __forceinline__ float lerp(float a, float b, float ratio)
 {
 	return a * (1.0f - ratio) + b * ratio;
 }
 
+// 1D cubic interpolation with four points
 __device__ __forceinline__ float cubic(float p0, float p1, float p2, float p3, float x)
 {
 	return p1 + 0.5f * x * (p2 - p0 + x * (2.0f * p0 - 5.0f * p1 + 4.0f * p2 - p3 + x * (3.0f * (p1 - p2) + p3 - p0)));
 }
 
+// Fast gradient function for gradient noise
 __device__ __forceinline__ float grad(int hash, float x, float y, float z)
 {
 	switch (hash & 0xF)
@@ -181,14 +167,14 @@ __device__ __forceinline__ float grad(int hash, float x, float y, float z)
 	}
 }
 
+// Ken Perlin's fade function for Perlin noise
 __device__ __forceinline__ float fade(float t)
 {
-	// Fade function as defined by Ken Perlin.  This eases coordinate values
-	// so that they will ease towards integral values.  This ends up smoothing
-	// the final output.
 	return t * t * t * (t * (t * 6.0f - 15.0f) + 10.0f);         // 6t^5 - 15t^4 + 10t^3
 }
 
+// Dot product using a float[3] and float parameters
+// NOTE: could be cleaned up
 __device__ __forceinline__ float dot(float g[3], float x, float y, float z) {
 	return g[0] * x + g[1] * y + g[2] * z;
 }
@@ -196,12 +182,13 @@ __device__ __forceinline__ float dot(float g[3], float x, float y, float z) {
 __device__ __forceinline__ unsigned char calcPerm(int p)
 {
 	return (unsigned char)(hash(p) % 512);
+//	return perm[p % 512];
 }
-
 
 __device__ __forceinline__ unsigned char calcPerm12(int p)
 {
-	return perm[p] % 12;
+//	return perm[p] % 12;
+	return (unsigned char)(hash(p) % 12);
 }
 
 

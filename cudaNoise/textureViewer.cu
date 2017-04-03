@@ -182,4 +182,6 @@ int main(int argc, char **argv)
 	glutKeyboardFunc(key_func);
 	glutDisplayFunc(draw_func);
 	glutMainLoop();
+
+	printf("\n\n");
 }
