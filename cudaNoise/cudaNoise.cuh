@@ -179,18 +179,16 @@ __device__ __forceinline__ float dot(float g[3], float x, float y, float z) {
 	return g[0] * x + g[1] * y + g[2] * z;
 }
 
+
 __device__ __forceinline__ unsigned char calcPerm(int p)
 {
-	return (unsigned char)(hash(p) % 512);
-//	return perm[p % 512];
+	return (unsigned char)(hash(p));
 }
 
 __device__ __forceinline__ unsigned char calcPerm12(int p)
 {
-//	return perm[p] % 12;
 	return (unsigned char)(hash(p) % 12);
 }
-
 
 // Noise functions
 
@@ -257,10 +255,15 @@ __device__ __forceinline__ float simplexNoise(float3 pos, float scale, int seed)
 	int jj = j & 255;
 	int kk = k & 255;
 
-	int gi0 = calcPerm12(ii + perm[jj + perm[kk]]);
-	int gi1 = calcPerm12(ii + i1 + perm[jj + j1 + perm[kk + k1]]);
-	int gi2 = calcPerm12(ii + i2 + perm[jj + j2 + perm[kk + k2]]);
-	int gi3 = calcPerm12(ii + 1 + perm[jj + 1 + perm[kk + 1]]);
+	//int gi0 = calcPerm12(ii + perm[jj + perm[kk]]);
+	//int gi1 = calcPerm12(ii + i1 + perm[jj + j1 + perm[kk + k1]]);
+	//int gi2 = calcPerm12(ii + i2 + perm[jj + j2 + perm[kk + k2]]);
+	//int gi3 = calcPerm12(ii + 1 + perm[jj + 1 + perm[kk + 1]]);
+
+	int gi0 = calcPerm12(ii + calcPerm(jj + calcPerm(kk)));
+	int gi1 = calcPerm12(ii + i1 + calcPerm(jj + j1 + calcPerm(kk + k1)));
+	int gi2 = calcPerm12(ii + i2 + calcPerm(jj + j2 + calcPerm(kk + k2)));
+	int gi3 = calcPerm12(ii + 1 + calcPerm(jj + 1 + calcPerm(kk + 1)));
 
 	// Calculate the contribution from the four corners
 	float t0 = 0.6f - x0*x0 - y0*y0 - z0*z0;
