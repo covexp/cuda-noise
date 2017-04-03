@@ -34,6 +34,9 @@ __global__ void kernel(uchar4 *ptr, float zoomFactor, int samples, int seed)
 	float fx = x / (float)DIM;
 	float fy = y / (float)DIM;
 
+//	fx += 72004.824f;
+//	fy += 37248.234f;
+
 	float3 pos = make_float3(fx, fy, 0.5f);
 	pos = scaleVector(pos, zoomFactor);
 
@@ -48,12 +51,12 @@ __global__ void kernel(uchar4 *ptr, float zoomFactor, int samples, int seed)
 		float3 ditheredPos = make_float3(pos.x + dx, pos.y + dy, pos.z + dz);
 
 //		float val = checker(ditheredPos, 1.0f, seed);
-		float val = discreteNoise(ditheredPos, 1.0f, 3478);
+//		float val = discreteNoise(ditheredPos, 1.0f, 3478);
 //		float val = linearValue(ditheredPos, 1.0f, seed);
 //		float val = perlinNoise(ditheredPos, 1.0f, seed);
 //		float val = simplexNoise(ditheredPos, 1.0f, seed);
-//		float val = repeater(ditheredPos, 1.0f, seed, 16, 2.0f, 0.5f, CUDANOISE_PERLIN);
-//		float val = repeaterPerlin(ditheredPos, 1.0f, seed, 16, 1.9f, 0.5f);
+		float val = repeater(ditheredPos, 1.0f, seed, 128, 1.9f, 0.5f, CUDANOISE_PERLIN);
+//		float val = repeaterPerlin(ditheredPos, 1.0f, seed, 128, 1.9f, 0.5f);
 //		float val = repeaterSimplex(ditheredPos, 1.0f, seed, 128, 1.5f, 0.8f);
 //		float val = turbulence(ditheredPos, 4.0f, 1.0f, seed, 0.2f, CUDANOISE_PERLIN, CUDANOISE_CHECKER);
 //		float val = repeaterTurbulence(ditheredPos, 0.2f, 1.0f, seed, 0.8f, 32, CUDANOISE_PERLIN, CUDANOISE_PERLIN);
@@ -96,7 +99,7 @@ void redrawTexture()
 
 	double time_spent = (double)(endTime - startTime) / CLOCKS_PER_SEC;
 
-	printf("Time spent: %f\r", time_spent);
+	printf("Time spent: %f\n", time_spent);
 
 	glutPostRedisplay();
 }
