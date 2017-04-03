@@ -264,10 +264,10 @@ __device__ __forceinline__ float simplexNoise(float3 pos, float scale, int seed)
 	int jj = j & 255;
 	int kk = k & 255;
 
-	int gi0 = calcPerm12(ii + calcPerm(jj + calcPerm(kk)));
-	int gi1 = calcPerm12(ii + i1 + calcPerm(jj + j1 + calcPerm(kk + k1)));
-	int gi2 = calcPerm12(ii + i2 + calcPerm(jj + j2 + calcPerm(kk + k2)));
-	int gi3 = calcPerm12(ii + 1 + calcPerm(jj + 1 + calcPerm(kk + 1)));
+	int gi0 = calcPerm12(seed + ii + calcPerm(seed + jj + calcPerm(seed + kk)));
+	int gi1 = calcPerm12(seed + ii + i1 + calcPerm(seed + jj + j1 + calcPerm(seed + kk + k1)));
+	int gi2 = calcPerm12(seed + ii + i2 + calcPerm(seed + jj + j2 + calcPerm(seed + kk + k2)));
+	int gi3 = calcPerm12(seed + ii + 1 + calcPerm(seed + jj + 1 + calcPerm(seed + kk + 1)));
 
 	// Calculate the contribution from the four corners
 	float t0 = 0.6f - x0*x0 - y0*y0 - z0*z0;
@@ -582,7 +582,7 @@ __device__ __forceinline__ float repeaterSimplex(float3 pos, float scale, int se
 // NOTE: about 10% slower than the dedicated repeater functions
 __device__ __forceinline__ float repeater(float3 pos, float scale, int seed, int n, float lacunarity, float decay, basisFunction basis)
 {
-	float acc = -1.0f;
+	float acc = 0.0f;
 	float amp = 1.0f;
 
 	for (int i = 0; i < n; i++)
