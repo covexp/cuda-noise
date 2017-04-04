@@ -6,31 +6,33 @@
 
 #include <cuda_runtime.h>
 
+namespace cudaNoise {
+
 // Basis functions
 typedef enum {
-	CUDANOISE_CHECKER,
-	CUDANOISE_DISCRETE,
-	CUDANOISE_LINEARVALUE,
-	CUDANOISE_FADEDVALUE,
-	CUDANOISE_CUBICVALUE,
-	CUDANOISE_PERLIN,
-	CUDANOISE_SIMPLEX,
-	CUDANOISE_SPOTS
+	BASIS_CHECKER,
+	BASIS_DISCRETE,
+	BASIS_LINEARVALUE,
+	BASIS_FADEDVALUE,
+	BASIS_CUBICVALUE,
+	BASIS_PERLIN,
+	BASIS_SIMPLEX,
+	BASIS_SPOTS
 } basisFunction;
 
 // Shaping functions
 typedef enum {
-	CUDANOISE_STEP,
-	CUDANOISE_LINEAR,
-	CUDANOISE_QUADRATIC
+	SHAPE_STEP,
+	SHAPE_LINEAR,
+	SHAPE_QUADRATIC
 } profileShape;
 
 // Repeat operators
 typedef enum {
-	CUDANOISE_ADD,
-	CUDANOISE_AVG,
-	CUDANOISE_MAX,
-	CUDANOISE_MIN
+	OPERATOR_ADD,
+	OPERATOR_AVG,
+	OPERATOR_MAX,
+	OPERATOR_MIN
 } repeatOperator;
 
 #define EPSILON 0.000000001f
@@ -214,7 +216,7 @@ __device__ __forceinline__ float simplexNoise(float3 pos, float scale, int seed)
 
 	float n0, n1, n2, n3; // Noise contributions from the four corners
 
-						  // Skew the input space to determine which simplex cell we're in
+							// Skew the input space to determine which simplex cell we're in
 	float s = (xin + yin + zin)*F3; // Very nice and simple skew factor for 3D
 	int i = floorf(xin + s);
 	int j = floorf(yin + s);
@@ -240,8 +242,8 @@ __device__ __forceinline__ float simplexNoise(float3 pos, float scale, int seed)
 		else { i1 = 0.0f; j1 = 0.0f; k1 = 1.0f; i2 = 1.0f; j2 = 0.0f; k2 = 1.0f; } // Z X Y order
 	}
 	else { // x0<y0
-		if (y0<z0) { i1 = 0.0f; j1 = 0.0f; k1 = 1.0f; i2 = 0.0f; j2 = 1; k2 = 1.0f; } // Z Y X order
-		else if (x0<z0) { i1 = 0.0f; j1 = 1.0f; k1 = 0.0f; i2 = 0.0f; j2 = 1.0f; k2 = 1.0f; } // Y Z X order
+		if (y0 < z0) { i1 = 0.0f; j1 = 0.0f; k1 = 1.0f; i2 = 0.0f; j2 = 1; k2 = 1.0f; } // Z Y X order
+		else if (x0 < z0) { i1 = 0.0f; j1 = 1.0f; k1 = 0.0f; i2 = 0.0f; j2 = 1.0f; k2 = 1.0f; } // Y Z X order
 		else { i1 = 0.0f; j1 = 1.0f; k1 = 0.0f; i2 = 1.0f; j2 = 1.0f; k2 = 0.0f; } // Y X Z order
 	}
 
@@ -271,25 +273,25 @@ __device__ __forceinline__ float simplexNoise(float3 pos, float scale, int seed)
 
 	// Calculate the contribution from the four corners
 	float t0 = 0.6f - x0*x0 - y0*y0 - z0*z0;
-	if (t0<0.0f) n0 = 0.0f;
+	if (t0 < 0.0f) n0 = 0.0f;
 	else {
 		t0 *= t0;
 		n0 = t0 * t0 * dot(gradMap[gi0], x0, y0, z0);
 	}
 	float t1 = 0.6f - x1*x1 - y1*y1 - z1*z1;
-	if (t1<0.0f) n1 = 0.0f;
+	if (t1 < 0.0f) n1 = 0.0f;
 	else {
 		t1 *= t1;
 		n1 = t1 * t1 * dot(gradMap[gi1], x1, y1, z1);
 	}
 	float t2 = 0.6f - x2*x2 - y2*y2 - z2*z2;
-	if (t2<0.0f) n2 = 0.0f;
+	if (t2 < 0.0f) n2 = 0.0f;
 	else {
 		t2 *= t2;
 		n2 = t2 * t2 * dot(gradMap[gi2], x2, y2, z2);
 	}
 	float t3 = 0.6f - x3*x3 - y3*y3 - z3*z3;
-	if (t3<0.0f) n3 = 0.0f;
+	if (t3 < 0.0f) n3 = 0.0f;
 	else {
 		t3 *= t3;
 		n3 = t3 * t3 * dot(gradMap[gi3], x3, y3, z3);
@@ -348,17 +350,17 @@ __device__ __forceinline__ float spots(float3 pos, float scale, int seed, float 
 
 					switch (shape)
 					{
-					case(CUDANOISE_STEP):
+					case(SHAPE_STEP):
 						if (distanceSq < size)
 							val = fmaxf(val, 1.0f);
 						else
 							val = fmaxf(val, -1.0f);
 						break;
-					case(CUDANOISE_LINEAR):
+					case(SHAPE_LINEAR):
 						float distanceAbs = fabsf(distU) + fabsf(distV) + fabsf(distW);
 						val = fmaxf(val, 1.0f - clamp(distanceAbs, 0.0f, size) / size);
 						break;
-					case(CUDANOISE_QUADRATIC):
+					case(SHAPE_QUADRATIC):
 						val = fmaxf(val, 1.0f - clamp(distanceSq, 0.0f, size) / size);
 						break;
 					}
@@ -589,29 +591,29 @@ __device__ __forceinline__ float repeater(float3 pos, float scale, int seed, int
 	{
 		switch (basis)
 		{
-		case(CUDANOISE_CHECKER):
+		case(BASIS_CHECKER):
 			acc += checker(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed) * amp;
 			break;
-		case(CUDANOISE_DISCRETE):
+		case(BASIS_DISCRETE):
 			acc += discreteNoise(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed) * amp;
 			break;
-		case(CUDANOISE_LINEARVALUE):
+		case(BASIS_LINEARVALUE):
 			acc += linearValue(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed) * amp;
 			break;
-		case(CUDANOISE_FADEDVALUE):
+		case(BASIS_FADEDVALUE):
 			acc += fadedValue(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed) * amp;
 			break;
-		case(CUDANOISE_CUBICVALUE):
+		case(BASIS_CUBICVALUE):
 			acc += cubicValue(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed) * amp;
 			break;
-		case(CUDANOISE_PERLIN):
+		case(BASIS_PERLIN):
 			acc += perlinNoise(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed) * amp;
 			break;
-		case(CUDANOISE_SIMPLEX):
+		case(BASIS_SIMPLEX):
 			acc += simplexNoise(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed) * amp;
 			break;
-		case(CUDANOISE_SPOTS):
-			acc = fmaxf(acc, spots(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed, 0.1f, 0, 4, 1.0f, CUDANOISE_LINEAR));
+		case(BASIS_SPOTS):
+			acc = fmaxf(acc, spots(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed, 0.1f, 0, 4, 1.0f, SHAPE_LINEAR));
 			break;
 		}
 
@@ -628,27 +630,27 @@ __device__ __forceinline__ float turbulence(float3 pos, float scaleIn, float sca
 {
 	switch (inFunc)
 	{
-	case(CUDANOISE_CHECKER):
+	case(BASIS_CHECKER):
 		pos.x += checker(pos, scaleIn, seed) * strength;
 		pos.y += checker(pos, scaleIn, seed) * strength;
 		pos.z += checker(pos, scaleIn, seed) * strength;
 		break;
-	case(CUDANOISE_LINEARVALUE):
+	case(BASIS_LINEARVALUE):
 		pos.x += linearValue(pos, scaleIn, seed) * strength;
 		pos.y += linearValue(pos, scaleIn, seed) * strength;
 		pos.z += linearValue(pos, scaleIn, seed) * strength;
 		break;
-	case(CUDANOISE_FADEDVALUE):
+	case(BASIS_FADEDVALUE):
 		pos.x += fadedValue(pos, scaleIn, seed) * strength;
 		pos.y += fadedValue(pos, scaleIn, seed) * strength;
 		pos.z += fadedValue(pos, scaleIn, seed) * strength;
 		break;
-	case(CUDANOISE_CUBICVALUE):
+	case(BASIS_CUBICVALUE):
 		pos.x += cubicValue(pos, scaleIn, seed) * strength;
 		pos.y += cubicValue(pos, scaleIn, seed) * strength;
 		pos.z += cubicValue(pos, scaleIn, seed) * strength;
 		break;
-	case(CUDANOISE_PERLIN):
+	case(BASIS_PERLIN):
 		pos.x += perlinNoise(pos, scaleIn, seed) * strength;
 		pos.y += perlinNoise(pos, scaleIn, seed) * strength;
 		pos.z += perlinNoise(pos, scaleIn, seed) * strength;
@@ -657,19 +659,19 @@ __device__ __forceinline__ float turbulence(float3 pos, float scaleIn, float sca
 
 	switch (outFunc)
 	{
-	case(CUDANOISE_CHECKER):
+	case(BASIS_CHECKER):
 		return checker(pos, scaleOut, seed);
 		break;
-	case(CUDANOISE_LINEARVALUE):
+	case(BASIS_LINEARVALUE):
 		return linearValue(pos, scaleOut, seed);
 		break;
-	case(CUDANOISE_FADEDVALUE):
+	case(BASIS_FADEDVALUE):
 		return fadedValue(pos, scaleOut, seed);
 		break;
-	case(CUDANOISE_CUBICVALUE):
+	case(BASIS_CUBICVALUE):
 		return cubicValue(pos, scaleOut, seed);
 		break;
-	case(CUDANOISE_PERLIN):
+	case(BASIS_PERLIN):
 		return perlinNoise(pos, scaleOut, seed);
 		break;
 	}
@@ -684,5 +686,7 @@ __device__ __forceinline__ float repeaterTurbulence(float3 pos, float scaleIn, f
 
 	return repeater(pos, scaleOut, seed, n, 2.0f, 0.75f, basisOut);
 }
+
+} // namespace
 
 #endif

@@ -38,15 +38,15 @@ __global__ void kernel(uchar4 *ptr, float zoomFactor, int samples, int seed)
 	//fy += 38.234f;
 
 	float3 pos = make_float3(fx, fy, 0.5f);
-	pos = scaleVector(pos, zoomFactor);
+	pos = cudaNoise::scaleVector(pos, zoomFactor);
 
 	float acc = 0.0f;
 
 	for (int i = 0; i < samples; i++)
 	{
-		float dx = randomFloat(327482 + i * 2347 + seed)  / (float)DIM * zoomFactor;
-		float dy = randomFloat(912472 + i * 118438 + seed)  / (float)DIM * zoomFactor;
-		float dz = randomFloat(112348 + i * 68214 + seed)  / (float)DIM * zoomFactor;
+		float dx = cudaNoise::randomFloat(327482 + i * 2347 + seed)  / (float)DIM * zoomFactor;
+		float dy = cudaNoise::randomFloat(912472 + i * 118438 + seed)  / (float)DIM * zoomFactor;
+		float dz = cudaNoise::randomFloat(112348 + i * 68214 + seed)  / (float)DIM * zoomFactor;
 
 		float3 ditheredPos = make_float3(pos.x + dx, pos.y + dy, pos.z + dz);
 
@@ -55,7 +55,7 @@ __global__ void kernel(uchar4 *ptr, float zoomFactor, int samples, int seed)
 //		float val = linearValue(ditheredPos, 1.0f, seed);
 //		float val = perlinNoise(ditheredPos, 1.0f, seed);
 //		float val = simplexNoise(ditheredPos, 1.0f, seed);
-		float val = repeater(ditheredPos, 1.0f, seed, 128, 1.5f, 0.75f, CUDANOISE_SIMPLEX);
+		float val = cudaNoise::repeater(ditheredPos, 1.0f, seed, 128, 1.5f, 0.75f, cudaNoise::BASIS_SIMPLEX);
 //		float val = repeaterPerlin(ditheredPos, 1.0f, seed, 128, 1.9f, 0.5f);
 //		float val = repeaterSimplex(ditheredPos, 1.0f, seed, 128, 1.5f, 0.8f);
 //		float val = turbulence(ditheredPos, 4.0f, 1.0f, seed, 0.2f, CUDANOISE_PERLIN, CUDANOISE_CHECKER);
@@ -70,8 +70,8 @@ __global__ void kernel(uchar4 *ptr, float zoomFactor, int samples, int seed)
 
 	acc /= (float)samples;
 
-	acc = mapToUnsigned(acc);
-	acc = clamp(acc, 0.0f, 1.0f);
+	acc = cudaNoise::mapToUnsigned(acc);
+	acc = cudaNoise::clamp(acc, 0.0f, 1.0f);
 
 	unsigned char iVal = 255 * acc;
 
