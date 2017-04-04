@@ -372,6 +372,49 @@ __device__ __forceinline__ float spots(float3 pos, float scale, int seed, float 
 	return val;
 }
 
+// Worley cellular noise
+__device__ __forceinline__ float worleyNoise(float3 pos, float scale, int seed, float size, int minNum, int maxNum, float jitter)
+{
+	if (size < EPSILON)
+		return 0.0f;
+
+	int ix = (int)(pos.x * scale);
+	int iy = (int)(pos.y * scale);
+	int iz = (int)(pos.z * scale);
+
+	float u = pos.x - (float)ix;
+	float v = pos.y - (float)iy;
+	float w = pos.z - (float)iz;
+
+	float minDist = 1000000.0f;
+
+	// Traverse the whole 3x3 neighborhood looking for the closest feature point
+	for (int x = -1; x < 2; x++)
+	{
+		for (int y = -1; y < 2; y++)
+		{
+			for (int z = -1; z < 2; z++)
+			{
+				int numSpots = randomIntRange(minNum, maxNum, seed + (ix + x) * 823746.0f + (iy + y) * 12306.0f + (iz + z) * 823452.0f + 3234874.0f);
+
+				for (int i = 0; i < numSpots; i++)
+				{
+					float distU = u - x - (randomFloat(seed + (ix + x) * 23784.0f + (iy + y) * 9183.0f + (iz + z) * 23874.0f * i + 27432.0f) * jitter - jitter / 2.0f);
+					float distV = v - y - (randomFloat(seed + (ix + x) * 12743.0f + (iy + y) * 45191.0f + (iz + z) * 144421.0f * i + 76671.0f) * jitter - jitter / 2.0f);
+					float distW = w - z - (randomFloat(seed + (ix + x) * 82734.0f + (iy + y) * 900213.0f + (iz + z) * 443241.0f * i + 199823.0f) * jitter - jitter / 2.0f);
+
+					float distanceSq = distU * distU + distV * distV + distW * distW;
+
+					if (distanceSq < minDist)
+						minDist = distanceSq;
+				}
+			}
+		}
+	}
+
+	return __saturatef(minDist) * 2.0f - 1.0f;
+}
+
 // Tricubic interpolation
 __device__ __forceinline__ float tricubic(int x, int y, int z, float u, float v, float w)
 {

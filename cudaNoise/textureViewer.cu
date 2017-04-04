@@ -50,20 +50,20 @@ __global__ void kernel(uchar4 *ptr, float zoomFactor, int samples, int seed)
 
 		float3 ditheredPos = make_float3(pos.x + dx, pos.y + dy, pos.z + dz);
 
-//		float val = checker(ditheredPos, 1.0f, seed);
-//		float val = discreteNoise(ditheredPos, 1.0f, 3478);
-//		float val = linearValue(ditheredPos, 1.0f, seed);
-//		float val = perlinNoise(ditheredPos, 1.0f, seed);
-//		float val = simplexNoise(ditheredPos, 1.0f, seed);
-		float val = cudaNoise::repeater(ditheredPos, 1.0f, seed, 128, 1.5f, 0.75f, cudaNoise::BASIS_SIMPLEX);
-//		float val = repeaterPerlin(ditheredPos, 1.0f, seed, 128, 1.9f, 0.5f);
-//		float val = repeaterSimplex(ditheredPos, 1.0f, seed, 128, 1.5f, 0.8f);
-//		float val = turbulence(ditheredPos, 4.0f, 1.0f, seed, 0.2f, CUDANOISE_PERLIN, CUDANOISE_CHECKER);
-//		float val = repeaterTurbulence(ditheredPos, 0.2f, 1.0f, seed, 0.8f, 32, CUDANOISE_PERLIN, CUDANOISE_PERLIN);
-//		float val = recursiveTurbulence(ditheredPos, 3, 2.0f, 0.5f, 1.0f);
-//		float val = cubicValue(ditheredPos, 1.0f);
-//		float val = fadedValue(ditheredPos, 1.0f);
-//		float val = spots(ditheredPos, 1.0f, seed, 0.1f, 0, 4, 1.0f, CUDANOISE_STEP);
+//		float val = cudaNoise::checker(ditheredPos, 1.0f, seed);
+//		float val = cudaNoise::discreteNoise(ditheredPos, 1.0f, 3478);
+//		float val = cudaNoise::linearValue(ditheredPos, 1.0f, seed);
+//		float val = cudaNoise::perlinNoise(ditheredPos, 1.0f, seed);
+//		float val = cudaNoise::simplexNoise(ditheredPos, 1.0f, seed);
+//		float val = cudaNoise::repeater(ditheredPos, 1.0f, seed, 128, 1.5f, 0.75f, cudaNoise::BASIS_SIMPLEX);
+//		float val = cudaNoise::repeaterPerlin(ditheredPos, 1.0f, seed, 128, 1.9f, 0.5f);
+//		float val = cudaNoise::repeaterSimplex(ditheredPos, 1.0f, seed, 128, 1.5f, 0.8f);
+//		float val = cudaNoise::turbulence(ditheredPos, 4.0f, 1.0f, seed, 0.2f, CUDANOISE_PERLIN, CUDANOISE_CHECKER);
+//		float val = cudaNoise::repeaterTurbulence(ditheredPos, 0.2f, 1.0f, seed, 0.8f, 32, CUDANOISE_PERLIN, CUDANOISE_PERLIN);
+//		float val = cudaNoise::cubicValue(ditheredPos, 1.0f);
+//		float val = cudaNoise::fadedValue(ditheredPos, 1.0f);
+//		float val = cudaNoise::spots(ditheredPos, 1.0f, seed, 0.1f, 0, 4, 1.0f, CUDANOISE_STEP);
+		float val = cudaNoise::worleyNoise(ditheredPos, 1.0f, seed, 0.1f, 1, 1, 0.5f);
 
 		acc += val;
 	}
