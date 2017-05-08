@@ -17,6 +17,7 @@ typedef enum {
 	BASIS_CUBICVALUE,
 	BASIS_PERLIN,
 	BASIS_SIMPLEX,
+	BASIS_WORLEY,
 	BASIS_SPOTS
 } basisFunction;
 
@@ -27,10 +28,11 @@ typedef enum {
 	SHAPE_QUADRATIC
 } profileShape;
 
-// Repeat operators
+// Function blending operators
 typedef enum {
 	OPERATOR_ADD,
 	OPERATOR_AVG,
+	OPERATOR_MUL,
 	OPERATOR_MAX,
 	OPERATOR_MIN
 } repeatOperator;
@@ -395,9 +397,9 @@ __device__ __forceinline__ float worleyNoise(float3 pos, float scale, int seed, 
 		{
 			for (int z = -1; z < 2; z++)
 			{
-				int numSpots = randomIntRange(minNum, maxNum, seed + (ix + x) * 823746.0f + (iy + y) * 12306.0f + (iz + z) * 823452.0f + 3234874.0f);
+				int numPoints = randomIntRange(minNum, maxNum, seed + (ix + x) * 823746.0f + (iy + y) * 12306.0f + (iz + z) * 67262.0f);
 
-				for (int i = 0; i < numSpots; i++)
+				for (int i = 0; i < numPoints; i++)
 				{
 					float distU = u - x - (randomFloat(seed + (ix + x) * 23784.0f + (iy + y) * 9183.0f + (iz + z) * 23874.0f * i + 27432.0f) * jitter - jitter / 2.0f);
 					float distV = v - y - (randomFloat(seed + (ix + x) * 12743.0f + (iy + y) * 45191.0f + (iz + z) * 144421.0f * i + 76671.0f) * jitter - jitter / 2.0f);
@@ -655,13 +657,39 @@ __device__ __forceinline__ float repeater(float3 pos, float scale, int seed, int
 		case(BASIS_SIMPLEX):
 			acc += simplexNoise(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed) * amp;
 			break;
+		case(BASIS_WORLEY):
+			acc += worleyNoise(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed, 0.1f, 4, 4, 1.0f) * amp;
+			break;
 		case(BASIS_SPOTS):
-			acc = fmaxf(acc, spots(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed, 0.1f, 0, 4, 1.0f, SHAPE_LINEAR));
+			acc += spots(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed, 0.1f, 0, 4, 1.0f, SHAPE_LINEAR) * amp;
 			break;
 		}
 
 		scale *= lacunarity;
 		amp *= decay;
+	}
+
+	return acc;
+}
+
+// Fractal Simplex noise
+// Unlike the repeater function, which calculates a fixed number of noise octaves, the fractal function continues until
+// the feature size is smaller than one pixel
+__device__ __forceinline__ float fractalSimplex(float3 pos, float scale, int seed, float du, int n, float lacunarity, float decay)
+{
+	float acc = 0.0f;
+	float amp = 1.0f;
+
+	float rdu = 1.0f / du;
+
+	for (int i = 0; i < n; i++)
+	{
+		acc += simplexNoise(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed) * amp;
+		scale *= lacunarity;
+		amp *= decay;
+
+		if (scale > rdu)
+			break;
 	}
 
 	return acc;
@@ -698,6 +726,16 @@ __device__ __forceinline__ float turbulence(float3 pos, float scaleIn, float sca
 		pos.y += perlinNoise(pos, scaleIn, seed) * strength;
 		pos.z += perlinNoise(pos, scaleIn, seed) * strength;
 		break;
+	case(BASIS_SIMPLEX):
+		pos.x += simplexNoise(pos, scaleIn, seed) * strength;
+		pos.y += simplexNoise(pos, scaleIn, seed) * strength;
+		pos.z += simplexNoise(pos, scaleIn, seed) * strength;
+		break;
+	case(BASIS_WORLEY):
+		pos.x += worleyNoise(pos, scaleIn, seed, 1.0f, 4, 4, 1.0f) * strength;
+		pos.y += worleyNoise(pos, scaleIn, seed, 1.0f, 4, 4, 1.0f) * strength;
+		pos.z += worleyNoise(pos, scaleIn, seed, 1.0f, 4, 4, 1.0f) * strength;
+		break;
 	}
 
 	switch (outFunc)
@@ -716,6 +754,12 @@ __device__ __forceinline__ float turbulence(float3 pos, float scaleIn, float sca
 		break;
 	case(BASIS_PERLIN):
 		return perlinNoise(pos, scaleOut, seed);
+		break;
+	case(BASIS_SIMPLEX):
+		return simplexNoise(pos, scaleIn, seed);
+		break;
+	case(BASIS_WORLEY):
+		return worleyNoise(pos, scaleIn, seed, 1.0f, 4, 4, 1.0f);
 		break;
 	}
 
