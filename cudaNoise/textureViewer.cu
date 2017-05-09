@@ -33,8 +33,8 @@ __global__ void kernel(uchar4 *ptr, float zoomFactor, int samples, int seed)
 	float fx = x / (float)DIM;
 	float fy = y / (float)DIM;
 
-	//fx += 74.824f;
-	//fy += 38.234f;
+	fx += 74.824f;
+	fy += 38.234f;
 
 	float3 pos = make_float3(fx, fy, 0.0f);
 	pos = cudaNoise::scaleVector(pos, zoomFactor);
@@ -55,12 +55,12 @@ __global__ void kernel(uchar4 *ptr, float zoomFactor, int samples, int seed)
 //		float val = cudaNoise::discreteNoise(ditheredPos, 1.0f, 3478);
 //		float val = cudaNoise::linearValue(ditheredPos, 1.0f, seed);
 //		float val = cudaNoise::perlinNoise(ditheredPos, 1.0f, seed);
-//		float val = cudaNoise::simplexNoise(ditheredPos, 1.0f, seed);
+//		float val = cudaNoise::simplexNoise(ditheredPos, 0.01f, seed);
 //		float val = cudaNoise::worleyNoise(ditheredPos, 1.0f, seed, 300.1f, 4, 4, 1.0f);
 //		float val = cudaNoise::repeater(ditheredPos, 1.0f, seed, 4, 1.5f, 0.75f, cudaNoise::BASIS_PERLIN);
 //		float val = cudaNoise::repeaterPerlin(ditheredPos, 1.0f, seed, 128, 1.9f, 0.5f);
 //		float val = cudaNoise::repeaterSimplex(ditheredPos, 1.0f, seed, 128, 1.5f, 0.8f);
-		float val = cudaNoise::fractalSimplex(ditheredPos, 1.0f, seed, du, 512, 2.0f, 0.75f);
+		float val = cudaNoise::fractalSimplex(ditheredPos, 1.0f, seed, du, 512, 1.5f, 0.95f);
 //		float val = cudaNoise::turbulence(ditheredPos, 4.0f, 1.0f, seed, 0.02f, cudaNoise::BASIS_PERLIN, cudaNoise::BASIS_CHECKER);
 //		float val = cudaNoise::repeaterTurbulence(ditheredPos, 0.2f, 1.0f, seed, 0.8f, 32, CUDANOISE_PERLIN, CUDANOISE_PERLIN);
 //		float val = cudaNoise::cubicValue(ditheredPos, 1.0f, seed);
