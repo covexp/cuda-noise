@@ -80,27 +80,27 @@ __device__ __forceinline__ float clamp(float val, float min, float max)
 	return val;
 }
 
-// Maps from the unsigned range [-1, 1] to signed [0, 1]
+// Maps from the signed range [0, 1] to unsigned [-1, 1]
 // NOTE: no clamping
 __device__ __forceinline__ float mapToSigned(float input)
 {
 	return input * 2.0f - 1.0f;
 }
 
-// Maps from the signed range [0, 1] to unsigned [-1, 1]
+// Maps from the unsigned range [-1, 1] to signed [0, 1]
 // NOTE: no clamping
 __device__ __forceinline__ float mapToUnsigned(float input)
 {
 	return input * 0.5f + 0.5f;
 }
 
-// Maps from the unsigned range [-1, 1] to signed [0, 1] with clamping
+// Maps from the signed range [0, 1] to unsigned [-1, 1] with clamping
 __device__ __forceinline__ float clampToSigned(float input)
 {
 	return __saturatef(input) * 2.0f - 1.0f;
 }
 
-// Maps from the signed range [0, 1] to unsigned [-1, 1] with clamping
+// Maps from the unsigned range [-1, 1] to signed [0, 1] with clamping
 __device__ __forceinline__ float clampToUnsigned(float input)
 {
 	return __saturatef(input * 0.5f + 0.5f);
