@@ -487,6 +487,24 @@ __device__ __forceinline__ float repeaterPerlin(float3 pos, float scale, int see
 	return acc;
 }
 
+// Fast function for fBm using perlin absolute noise
+// Originally called "turbulence", this method takes the absolute value of each octave before adding
+__device__ __forceinline__ float repeaterPerlinAbs(float3 pos, float scale, int seed, int n, float lacunarity, float decay)
+{
+	float acc = 0.0f;
+	float amp = 1.0f;
+
+	for (int i = 0; i < n; i++)
+	{
+		acc += fabsf(perlinNoise(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed)) * amp;
+		scale *= lacunarity;
+		amp *= decay;
+	}
+
+	// Map the noise back to the standard expected range [-1, 1]
+	return mapToSigned(acc);
+}
+
 // Fast function for fBm using simplex noise
 __device__ __forceinline__ float repeaterSimplex(float3 pos, float scale, int seed, int n, float lacunarity, float decay)
 {
