@@ -21,19 +21,19 @@ __device__ __constant__ float gradMap[12][3] = { { 1.0f, 1.0f, 0.0f },{ -1.0f, 1
 // Helper functions for noise
 
 // Linearly interpolate between two float values
-__device__ __forceinline__ float lerp(float a, float b, float ratio)
+__device__  float lerp(float a, float b, float ratio)
 {
 	return a * (1.0f - ratio) + b * ratio;
 }
 
 // 1D cubic interpolation with four points
-__device__ __forceinline__ float cubic(float p0, float p1, float p2, float p3, float x)
+__device__  float cubic(float p0, float p1, float p2, float p3, float x)
 {
 	return p1 + 0.5f * x * (p2 - p0 + x * (2.0f * p0 - 5.0f * p1 + 4.0f * p2 - p3 + x * (3.0f * (p1 - p2) + p3 - p0)));
 }
 
 // Fast gradient function for gradient noise
-__device__ __forceinline__ float grad(int hash, float x, float y, float z)
+__device__  float grad(int hash, float x, float y, float z)
 {
 	switch (hash & 0xF)
 	{
@@ -58,25 +58,25 @@ __device__ __forceinline__ float grad(int hash, float x, float y, float z)
 }
 
 // Ken Perlin's fade function for Perlin noise
-__device__ __forceinline__ float fade(float t)
+__device__  float fade(float t)
 {
 	return t * t * t * (t * (t * 6.0f - 15.0f) + 10.0f);         // 6t^5 - 15t^4 + 10t^3
 }
 
 // Dot product using a float[3] and float parameters
 // NOTE: could be cleaned up
-__device__ __forceinline__ float dot(float g[3], float x, float y, float z) {
+__device__  float dot(float g[3], float x, float y, float z) {
 	return g[0] * x + g[1] * y + g[2] * z;
 }
 
 // Random value for simplex noise [0, 255]
-__device__ __forceinline__ unsigned char calcPerm(int p)
+__device__  unsigned char calcPerm(int p)
 {
 	return (unsigned char)(hash(p));
 }
 
 // Random value for simplex noise [0, 11]
-__device__ __forceinline__ unsigned char calcPerm12(int p)
+__device__  unsigned char calcPerm12(int p)
 {
 	return (unsigned char)(hash(p) % 12);
 }
@@ -84,7 +84,7 @@ __device__ __forceinline__ unsigned char calcPerm12(int p)
 // Noise functions
 
 // Simplex noise adapted from Java code by Stefan Gustafson and Peter Eastman
-__device__ __forceinline__ float simplexNoise(float3 pos, float scale, int seed)
+__device__  float simplexNoise(float3 pos, float scale, int seed)
 {
 	float xin = pos.x * scale;
 	float yin = pos.y * scale;
@@ -183,7 +183,7 @@ __device__ __forceinline__ float simplexNoise(float3 pos, float scale, int seed)
 }
 
 // Checker pattern
-__device__ __forceinline__ float checker(float3 pos, float scale, int seed)
+__device__  float checker(float3 pos, float scale, int seed)
 {
 	int ix = (int)(pos.x * scale);
 	int iy = (int)(pos.y * scale);
@@ -196,7 +196,7 @@ __device__ __forceinline__ float checker(float3 pos, float scale, int seed)
 }
 
 // Random spots
-__device__ __forceinline__ float spots(float3 pos, float scale, int seed, float size, int minNum, int maxNum, float jitter, profileShape shape)
+__device__  float spots(float3 pos, float scale, int seed, float size, int minNum, int maxNum, float jitter, profileShape shape)
 {
 	if (size < EPSILON)
 		return 0.0f;
@@ -253,7 +253,7 @@ __device__ __forceinline__ float spots(float3 pos, float scale, int seed, float 
 }
 
 // Worley cellular noise
-__device__ __forceinline__ float worleyNoise(float3 pos, float scale, int seed, float size, int minNum, int maxNum, float jitter)
+__device__  float worleyNoise(float3 pos, float scale, int seed, float size, int minNum, int maxNum, float jitter)
 {
 	if (size < EPSILON)
 		return 0.0f;
@@ -296,7 +296,7 @@ __device__ __forceinline__ float worleyNoise(float3 pos, float scale, int seed, 
 }
 
 // Tricubic interpolation
-__device__ __forceinline__ float tricubic(int x, int y, int z, float u, float v, float w)
+__device__  float tricubic(int x, int y, int z, float u, float v, float w)
 {
 	// interpolate along x first
 	float x00 = cubic(randomGrid(x - 1, y - 1, z - 1), randomGrid(x, y - 1, z - 1), randomGrid(x + 1, y - 1, z - 1), randomGrid(x + 2, y - 1, z - 1), u);
@@ -330,7 +330,7 @@ __device__ __forceinline__ float tricubic(int x, int y, int z, float u, float v,
 }
 
 // Discrete noise (nearest neighbor)
-__device__ __forceinline__ float discreteNoise(float3 pos, float scale, int seed)
+__device__  float discreteNoise(float3 pos, float scale, int seed)
 {
 	int ix = (int)(pos.x * scale);
 	int iy = (int)(pos.y * scale);
@@ -340,7 +340,7 @@ __device__ __forceinline__ float discreteNoise(float3 pos, float scale, int seed
 }
 
 // Linear value noise
-__device__ __forceinline__ float linearValue(float3 pos, float scale, int seed)
+__device__  float linearValue(float3 pos, float scale, int seed)
 {
 	int ix = (int)pos.x;
 	int iy = (int)pos.y;
@@ -373,7 +373,7 @@ __device__ __forceinline__ float linearValue(float3 pos, float scale, int seed)
 }
 
 // Linear value noise smoothed with Perlin's fade function
-__device__ __forceinline__ float fadedValue(float3 pos, float scale, int seed)
+__device__  float fadedValue(float3 pos, float scale, int seed)
 {
 	int ix = (int)(pos.x * scale);
 	int iy = (int)(pos.y * scale);
@@ -406,7 +406,7 @@ __device__ __forceinline__ float fadedValue(float3 pos, float scale, int seed)
 }
 
 // Tricubic interpolated value noise
-__device__ __forceinline__ float cubicValue(float3 pos, float scale, int seed)
+__device__  float cubicValue(float3 pos, float scale, int seed)
 {
 	pos.x = pos.x * scale;
 	pos.y = pos.y * scale;
@@ -424,7 +424,7 @@ __device__ __forceinline__ float cubicValue(float3 pos, float scale, int seed)
 }
 
 // Perlin gradient noise
-__device__ __forceinline__ float perlinNoise(float3 pos, float scale, int seed)
+__device__  float perlinNoise(float3 pos, float scale, int seed)
 {
 	pos.x = pos.x * scale;
 	pos.y = pos.y * scale;
@@ -472,7 +472,7 @@ __device__ __forceinline__ float perlinNoise(float3 pos, float scale, int seed)
 // Derived noise functions
 
 // Fast function for fBm using perlin noise
-__device__ __forceinline__ float repeaterPerlin(float3 pos, float scale, int seed, int n, float lacunarity, float decay)
+__device__  float repeaterPerlin(float3 pos, float scale, int seed, int n, float lacunarity, float decay)
 {
 	float acc = 0.0f;
 	float amp = 1.0f;
@@ -489,7 +489,7 @@ __device__ __forceinline__ float repeaterPerlin(float3 pos, float scale, int see
 
 // Fast function for fBm using perlin absolute noise
 // Originally called "turbulence", this method takes the absolute value of each octave before adding
-__device__ __forceinline__ float repeaterPerlinAbs(float3 pos, float scale, int seed, int n, float lacunarity, float decay)
+__device__  float repeaterPerlinAbs(float3 pos, float scale, int seed, int n, float lacunarity, float decay)
 {
 	float acc = 0.0f;
 	float amp = 1.0f;
@@ -506,7 +506,7 @@ __device__ __forceinline__ float repeaterPerlinAbs(float3 pos, float scale, int 
 }
 
 // Fast function for fBm using simplex noise
-__device__ __forceinline__ float repeaterSimplex(float3 pos, float scale, int seed, int n, float lacunarity, float decay)
+__device__  float repeaterSimplex(float3 pos, float scale, int seed, int n, float lacunarity, float decay)
 {
 	float acc = 0.0f;
 	float amp = 1.0f;
@@ -521,9 +521,25 @@ __device__ __forceinline__ float repeaterSimplex(float3 pos, float scale, int se
 	return acc;
 }
 
+// Fast function for fBm using simplex absolute noise
+__device__  float repeaterSimplexAbs(float3 pos, float scale, int seed, int n, float lacunarity, float decay)
+{
+	float acc = 0.0f;
+	float amp = 1.0f;
+
+	for (int i = 0; i < n; i++)
+	{
+		acc += fabsf(simplexNoise(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed)) * amp * 0.35f;
+		scale *= lacunarity;
+		amp *= decay;
+	}
+
+	return mapToSigned(acc);
+}
+
 // Generic fBm repeater
 // NOTE: about 10% slower than the dedicated repeater functions
-__device__ __forceinline__ float repeater(float3 pos, float scale, int seed, int n, float lacunarity, float decay, basisFunction basis)
+__device__  float repeater(float3 pos, float scale, int seed, int n, float lacunarity, float decay, basisFunction basis)
 {
 	float acc = 0.0f;
 	float amp = 1.0f;
@@ -571,7 +587,7 @@ __device__ __forceinline__ float repeater(float3 pos, float scale, int seed, int
 // Fractal Simplex noise
 // Unlike the repeater function, which calculates a fixed number of noise octaves, the fractal function continues until
 // the feature size is smaller than one pixel
-__device__ __forceinline__ float fractalSimplex(float3 pos, float scale, int seed, float du, int n, float lacunarity, float decay)
+__device__  float fractalSimplex(float3 pos, float scale, int seed, float du, int n, float lacunarity, float decay)
 {
 	float acc = 0.0f;
 	float amp = 1.0f;
@@ -593,7 +609,7 @@ __device__ __forceinline__ float fractalSimplex(float3 pos, float scale, int see
 
 // Generic turbulence function
 // Uses a first pass of noise to offset the input vectors for the second pass
-__device__ __forceinline__ float turbulence(float3 pos, float scaleIn, float scaleOut, int seed, float strength, basisFunction inFunc, basisFunction outFunc)
+__device__  float turbulence(float3 pos, float scaleIn, float scaleOut, int seed, float strength, basisFunction inFunc, basisFunction outFunc)
 {
 	switch (inFunc)
 	{
@@ -663,7 +679,7 @@ __device__ __forceinline__ float turbulence(float3 pos, float scaleIn, float sca
 }
 
 // Turbulence using repeaters for the first and second pass
-__device__ __forceinline__ float repeaterTurbulence(float3 pos, float scaleIn, float scaleOut, int seed, float strength, int n, basisFunction basisIn, basisFunction basisOut)
+__device__  float repeaterTurbulence(float3 pos, float scaleIn, float scaleOut, int seed, float strength, int n, basisFunction basisIn, basisFunction basisOut)
 {
 	pos.x += (repeater(make_float3(pos.x, pos.y, pos.z), scaleIn, seed, n, 2.0f, 0.5f, basisIn)) * strength;
 
