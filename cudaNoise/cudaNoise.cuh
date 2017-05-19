@@ -21,19 +21,19 @@ __device__ __constant__ float gradMap[12][3] = { { 1.0f, 1.0f, 0.0f },{ -1.0f, 1
 // Helper functions for noise
 
 // Linearly interpolate between two float values
-__device__  float lerp(float a, float b, float ratio)
+__device__ __forceinline__  float lerp(float a, float b, float ratio)
 {
 	return a * (1.0f - ratio) + b * ratio;
 }
 
 // 1D cubic interpolation with four points
-__device__  float cubic(float p0, float p1, float p2, float p3, float x)
+__device__ __forceinline__ float cubic(float p0, float p1, float p2, float p3, float x)
 {
 	return p1 + 0.5f * x * (p2 - p0 + x * (2.0f * p0 - 5.0f * p1 + 4.0f * p2 - p3 + x * (3.0f * (p1 - p2) + p3 - p0)));
 }
 
 // Fast gradient function for gradient noise
-__device__  float grad(int hash, float x, float y, float z)
+__device__ __forceinline__ float grad(int hash, float x, float y, float z)
 {
 	switch (hash & 0xF)
 	{
@@ -58,25 +58,25 @@ __device__  float grad(int hash, float x, float y, float z)
 }
 
 // Ken Perlin's fade function for Perlin noise
-__device__  float fade(float t)
+__device__ __forceinline__ float fade(float t)
 {
 	return t * t * t * (t * (t * 6.0f - 15.0f) + 10.0f);         // 6t^5 - 15t^4 + 10t^3
 }
 
 // Dot product using a float[3] and float parameters
 // NOTE: could be cleaned up
-__device__  float dot(float g[3], float x, float y, float z) {
+__device__ __forceinline__ float dot(float g[3], float x, float y, float z) {
 	return g[0] * x + g[1] * y + g[2] * z;
 }
 
 // Random value for simplex noise [0, 255]
-__device__  unsigned char calcPerm(int p)
+__device__ __forceinline__ unsigned char calcPerm(int p)
 {
 	return (unsigned char)(hash(p));
 }
 
 // Random value for simplex noise [0, 11]
-__device__  unsigned char calcPerm12(int p)
+__device__ __forceinline__ unsigned char calcPerm12(int p)
 {
 	return (unsigned char)(hash(p) % 12);
 }
