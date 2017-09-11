@@ -133,6 +133,13 @@ __device__ __forceinline__ float3 scaleVector(float3 v, float factor)
 	return make_float3(v.x * factor, v.y * factor, v.z * factor);
 }
 
+// Scale 3D vector by nonuniform parameters
+__device__ float3 nonuniformScaleVector(float3 v, float xf, float yf, float zf)
+{
+	return make_float3(v.x * xf, v.y * yf, v.z * zf);
+}
+
+
 // Adds two 3D vectors
 __device__ __forceinline__ float3 addVectors(float3 v, float3 w)
 {
