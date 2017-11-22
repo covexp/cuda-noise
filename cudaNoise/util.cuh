@@ -1,8 +1,8 @@
 // cudaNoise
 // Common utility functions and typedefs
 
-#ifndef util_cuh
-#define util_cuh
+#ifndef cudanoise_util_cuh
+#define cudanoise_util_cuh
 
 namespace cudaNoise {
 
