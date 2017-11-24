@@ -154,15 +154,11 @@ __device__ __forceinline__ float dotProduct(float3 u, float3 v)
 	return (u.x * v.x + u.y * v.y + u.z * v.z);
 }
 
-
-}
-
 // Device constants for noise
 
 __device__ __constant__ float gradMap[12][3] = { { 1.0f, 1.0f, 0.0f },{ -1.0f, 1.0f, 0.0f },{ 1.0f, -1.0f, 0.0f },{ -1.0f, -1.0f, 0.0f },
 { 1.0f, 0.0f, 1.0f },{ -1.0f, 0.0f, 1.0f },{ 1.0f, 0.0f, -1.0f },{ -1.0f, 0.0f, -1.0f },
 { 0.0f, 1.0f, 1.0f },{ 0.0f, -1.0f, 1.0f },{ 0.0f, 1.0f, -1.0f },{ 0.0f, -1.0f, -1.0f } };
-
 
 // Helper functions for noise
 

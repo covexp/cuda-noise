@@ -5,12 +5,12 @@
 
 #include </usr/include/SDL2/SDL.h>
 
-#include "../src/cudaNoise.cuh"
+#include "../include/cuda_noise.cuh"
 
 #define DIM 512
 #define SIZE DIM * DIM
 
-__global__ void kernel(uchar4 *buffer, float zoomFactor, int samples, int seed, int noise)
+__global__ void kernel(Uint32 *buffer, float zoomFactor, int samples, int seed, int noise)
 {
 	int x = threadIdx.x + blockIdx.x * blockDim.x;
 	int y = threadIdx.y + blockIdx.y * blockDim.y;
@@ -81,10 +81,57 @@ __global__ void kernel(uchar4 *buffer, float zoomFactor, int samples, int seed, 
 
 	unsigned char iVal = 255 * acc;
 
-	buffer[offset].x = iVal;
-	buffer[offset].y = iVal;
-	buffer[offset].z = iVal;
-	buffer[offset].w = 255;
+	Uint32 colorVal = iVal;
+	colorVal += iVal << 8;
+	colorVal += iVal << 16;
+	colorVal += 255 << 24;
+
+//	buffer[offset].x = iVal;
+//	buffer[offset].y = iVal;
+//	buffer[offset].z = iVal;
+//	buffer[offset].w = 255;
+
+	buffer[offset] = colorVal;
+}
+
+void paintSDL(Uint32 *image)
+{
+	SDL_Window *window= NULL;
+	SDL_Surface *screenSurface = NULL;
+
+	if(SDL_Init(SDL_INIT_VIDEO) < 0)
+		return;
+
+	window = SDL_CreateWindow("cudaNoise Texture Viewer",
+	                          SDL_WINDOWPOS_CENTERED,
+	                          SDL_WINDOWPOS_CENTERED,
+	                          DIM,
+	                          DIM,
+	                          SDL_WINDOW_SHOWN);
+
+	if(window == NULL)
+		return;
+
+	screenSurface = SDL_GetWindowSurface(window);
+	std::cout << "Bytes per pixel: " << (int) screenSurface->format->BytesPerPixel << std::endl;
+
+	SDL_FillRect(screenSurface, NULL, SDL_MapRGB(screenSurface->format, 0xFF, 0xFF, 0xFF));
+
+	Uint32 *pixels = (Uint32 *) screenSurface->pixels;
+
+	for(int j = 0; j < DIM; j++)
+	{
+		for(int i = 0; i < DIM; i++)
+		{
+			int idx = i + j * DIM;
+
+//			pixels[idx] = 16;
+			pixels[idx] = (Uint32) image[idx];
+		}
+	}
+
+	SDL_UpdateWindowSurface(window);
+	SDL_Delay(4000);
 }
 
 int main(int argc, char **argv)
@@ -100,12 +147,18 @@ int main(int argc, char **argv)
 	prop.minor = 0;
 	cudaChooseDevice(&dev, &prop);
 
-	uchar4 *h_buffer = new uchar4[SIZE];
+	Uint32 *h_buffer = new Uint32[SIZE];
 
-	uchar4 *d_buffer;
-	cudaMalloc((void**) &d_buffer, SIZE * sizeof(uchar4));
+	Uint32 *d_buffer;
+	cudaMalloc((void**) &d_buffer, SIZE * sizeof(Uint32));
+
+	std::cout << "Running kernel..." << std::endl;
 
 	kernel << <blocks, threads >> > (d_buffer, 1.0, 1, 42, 1);
+
+	cudaMemcpy(h_buffer, d_buffer, SIZE * sizeof(Uint32), cudaMemcpyDeviceToHost);
+
+	paintSDL(h_buffer);
 
 	delete[] h_buffer;
 
