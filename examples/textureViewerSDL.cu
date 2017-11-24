@@ -86,11 +86,6 @@ __global__ void kernel(Uint32 *buffer, float zoomFactor, int samples, int seed, 
 	colorVal += iVal << 16;
 	colorVal += 255 << 24;
 
-//	buffer[offset].x = iVal;
-//	buffer[offset].y = iVal;
-//	buffer[offset].z = iVal;
-//	buffer[offset].w = 255;
-
 	buffer[offset] = colorVal;
 }
 
@@ -124,9 +119,7 @@ void paintSDL(Uint32 *image)
 		for(int i = 0; i < DIM; i++)
 		{
 			int idx = i + j * DIM;
-
-//			pixels[idx] = 16;
-			pixels[idx] = (Uint32) image[idx];
+			pixels[idx] = image[idx];
 		}
 	}
 
@@ -154,7 +147,7 @@ int main(int argc, char **argv)
 
 	std::cout << "Running kernel..." << std::endl;
 
-	kernel << <blocks, threads >> > (d_buffer, 1.0, 1, 42, 1);
+	kernel << <blocks, threads >> > (d_buffer, 1.0, 1, 42, 4);
 
 	cudaMemcpy(h_buffer, d_buffer, SIZE * sizeof(Uint32), cudaMemcpyDeviceToHost);
 
