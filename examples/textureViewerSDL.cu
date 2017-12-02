@@ -2,6 +2,7 @@
 
 #include <cuda.h>
 #include <iostream>
+#include <ctime>
 
 #include </usr/include/SDL2/SDL.h>
 
@@ -19,8 +20,8 @@ __global__ void kernel(Uint32 *buffer, float zoomFactor, int samples, int seed, 
 	float fx = x / (float)DIM;
 	float fy = y / (float)DIM;
 
-	fx += 74.824f;
-	fy += 38.234f;
+	fx += 724.824f;
+	fy += 338.234f;
 
 	float3 pos = make_float3(fx, fy, 0.0f);
 	pos = cudaNoise::scaleVector(pos, zoomFactor);
@@ -61,13 +62,16 @@ __global__ void kernel(Uint32 *buffer, float zoomFactor, int samples, int seed, 
 			val = cudaNoise::fractalSimplex(ditheredPos, 1.0f, seed, du, 512, 1.5f, 0.95f);
 			break;
 		case(6):
-			val = cudaNoise::repeaterTurbulence(ditheredPos, 0.2f, 1.0f, seed, 0.8f, 32, cudaNoise::BASIS_PERLIN, cudaNoise::BASIS_PERLIN);
+			val = cudaNoise::repeaterTurbulence(ditheredPos, 0.2f, 1.0f, seed, 0.8f, 12, cudaNoise::BASIS_PERLIN, cudaNoise::BASIS_PERLIN);
 			break;
 		case(7):
 			val = cudaNoise::cubicValue(ditheredPos, 1.0f, seed);
 			break;
 		case(8):
 			val = cudaNoise::spots(ditheredPos, 1.0f, seed, 0.1f, 0, 8, 1.0f, cudaNoise::SHAPE_STEP);
+			break;
+		case(9):
+			val = cudaNoise::turbulence(ditheredPos, 4.2f, 2.0f, seed, 0.7f, cudaNoise::BASIS_PERLIN, cudaNoise::BASIS_PERLIN);
 			break;
 		}
 
@@ -147,7 +151,16 @@ int main(int argc, char **argv)
 
 	std::cout << "Running kernel..." << std::endl;
 
-	kernel << <blocks, threads >> > (d_buffer, 1.0, 1, 42, 4);
+	clock_t timeBegin = clock();
+
+	kernel << <blocks, threads >> > (d_buffer, 1.0, 1, 42, 3);
+	cudaDeviceSynchronize();
+
+	clock_t timeEnd = clock();
+
+	unsigned int ticks = (unsigned int)(timeEnd - timeBegin);
+
+	std::cout << "Run took: " << ticks << " ticks." << std::endl;
 
 	cudaMemcpy(h_buffer, d_buffer, SIZE * sizeof(Uint32), cudaMemcpyDeviceToHost);
 
