@@ -8,8 +8,8 @@
 
 #include "../include/cuda_noise.cuh"
 
-#define DIM 512
-#define SIZE DIM * DIM
+const int DIM = 512;
+const int SIZE = DIM * DIM;
 
 __global__ void kernel(Uint32 *buffer, float zoomFactor, int samples, int seed, int noise)
 {
