@@ -71,7 +71,7 @@ __global__ void kernel(Uint32 *buffer, float zoomFactor, int samples, int seed, 
 			val = cudaNoise::spots(ditheredPos, 1.0f, seed, 0.1f, 0, 8, 1.0f, cudaNoise::SHAPE_STEP);
 			break;
 		case(9):
-			val = cudaNoise::turbulence(ditheredPos, 4.2f, 2.0f, seed, 0.7f, cudaNoise::BASIS_PERLIN, cudaNoise::BASIS_PERLIN);
+			val = cudaNoise::turbulence(ditheredPos, 10.2f, 12.120f, seed, 0.27f, cudaNoise::BASIS_SIMPLEX, cudaNoise::BASIS_SIMPLEX);
 			break;
 		}
 
@@ -88,7 +88,6 @@ __global__ void kernel(Uint32 *buffer, float zoomFactor, int samples, int seed, 
 	Uint32 colorVal = iVal;
 	colorVal += iVal << 8;
 	colorVal += iVal << 16;
-	colorVal += 255 << 24;
 
 	buffer[offset] = colorVal;
 }
@@ -153,7 +152,7 @@ int main(int argc, char **argv)
 
 	clock_t timeBegin = clock();
 
-	kernel << <blocks, threads >> > (d_buffer, 1.0, 1, 42, 3);
+	kernel << <blocks, threads >> > (d_buffer, 1.0, 16, 42, 9);
 	cudaDeviceSynchronize();
 
 	clock_t timeEnd = clock();
