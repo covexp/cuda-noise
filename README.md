@@ -20,7 +20,9 @@ the input vector for other noise functions for turbulence effects.
 
 ## Usage
 
-cudaNoise comes as a single-header include library. Simply include cuda_noise.cuh in your CUDA source file, then call the cudaNoise functions from kernel or device functions. (Note: cudaNoise is not meant to be directly called from host code)
+cudaNoise comes as a single-header include library. Simply include cuda_noise.cuh in your CUDA source file, then call the cudaNoise functions from kernel or device functions. 
+
+**NOTE: cudaNoise is not designed to be directly called from host code**
 
 There is a simple texture viewer included in the /examples directory.
 
