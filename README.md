@@ -30,32 +30,32 @@ There is a simple texture viewer included in the /examples directory.
 
 #### 3D Checker pattern
 
-float checker(float3 pos, float scale, int seed)
+`float checker(float3 pos, float scale, int seed)`
 
 #### 3D Discrete noise
 
-float discreteNoise(float3 pos, float scale, int seed)
+`float discreteNoise(float3 pos, float scale, int seed)`
 
 #### 3D Linear value noise
 
-float linearValue(float3 pos, float scale, int seed)
+`float linearValue(float3 pos, float scale, int seed)`
 
 #### 3D Cubic value noise
 
-float cubicValue(float3 pos, float scale, int seed)
+`float cubicValue(float3 pos, float scale, int seed)`
 
 #### 3D Perlin gradient noise
 
-float perlinNoise(float3 pos, float scale, int seed)
+`float perlinNoise(float3 pos, float scale, int seed)`
 
 #### 3D Simplex noise
 
-float simplexNoise(float3 pos, float scale, int seed)
+`float simplexNoise(float3 pos, float scale, int seed)`
 
 #### 3D Worley cellular noise
 
-float worleyNoise(float3 pos, float scale, int seed, float size, int minNum, int maxNum, float jitter)
+`float worleyNoise(float3 pos, float scale, int seed, float size, int minNum, int maxNum, float jitter)`
 
 #### 3D Spots
 
-float spots(float3 pos, float scale, int seed, float size, int minNum, int maxNum, float jitter, profileShape shape)
+`float spots(float3 pos, float scale, int seed, float size, int minNum, int maxNum, float jitter, profileShape shape)`
