@@ -22,7 +22,7 @@ the input vector for other noise functions for turbulence effects.
 
 cudaNoise comes as a single-header include library. Simply include cuda_noise.cuh in your CUDA source file, then call the cudaNoise functions from kernel or device functions. 
 
-**NOTE: cudaNoise is not designed to be directly called from host code**
+**NOTE: cudaNoise is designed to be used from inside CUDA kernels and cannot directly be called from host code**
 
 There is a simple texture viewer included in the /examples directory.
 
@@ -77,3 +77,12 @@ float worleyNoise(float3 pos, float scale, int seed, float size, int minNum, int
 ```cpp
 float spots(float3 pos, float scale, int seed, float size, int minNum, int maxNum, float jitter, profileShape shape)
 ```
+
+## TODO
+
+- Implement 4D noise functions.
+- Optimization work.
+- Add more types of cellular functions.
+- Cleaning up the interface.
+
+Contributions are more than welcome!
