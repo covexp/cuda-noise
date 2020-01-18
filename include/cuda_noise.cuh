@@ -3,9 +3,6 @@
 
 #pragma once
 
-#ifndef cudanoise_cuh
-#define cudanoise_cuh
-
 #include <cuda_runtime.h>
 
 namespace cudaNoise {
@@ -833,5 +830,3 @@ namespace cudaNoise {
 	}
 
 } // namespace
-
-#endif
