@@ -627,7 +627,7 @@ namespace cudaNoise {
 
 		for (int i = 0; i < n; i++)
 		{
-			acc += perlinNoise(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed * (i + 3)) * amp;
+			acc += perlinNoise(make_float3(pos.x * scale + 6771.86937f, pos.y * scale + 5868.74465f, pos.z * scale + 386.830485f), 1.0f, seed * (i + 3)) * amp;
 			scale *= lacunarity;
 			amp *= decay;
 		}
@@ -644,7 +644,7 @@ namespace cudaNoise {
 
 		for (int i = 0; i < n; i++)
 		{
-			acc += fabsf(perlinNoise(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed)) * amp;
+			acc += fabsf(perlinNoise(make_float3(pos.x * scale + 8971.66955f, pos.y * scale + 94766.4536f, pos.z * scale + 38344.6818f), 1.0f, seed)) * amp;
 			scale *= lacunarity;
 			amp *= decay;
 		}
@@ -661,7 +661,7 @@ namespace cudaNoise {
 
 		for (int i = 0; i < n; i++)
 		{
-			acc += simplexNoise(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed) * amp;
+			acc += simplexNoise(make_float3(pos.x * scale + 9656.9093f, pos.y * scale + 5565.45659f, pos.z * scale + 87465.4999f), 1.0f, seed) * amp;
 			scale *= lacunarity;
 			amp *= decay;
 		}
@@ -677,7 +677,7 @@ namespace cudaNoise {
 
 		for (int i = 0; i < n; i++)
 		{
-			acc += fabsf(simplexNoise(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed)) * amp * 0.35f;
+			acc += fabsf(simplexNoise(make_float3(pos.x * scale + 32240.7922f, pos.y * scale + 835622.882f, pos.z * scale + 824.371968f), 1.0f, seed)) * amp * 0.35f;
 			scale *= lacunarity;
 			amp *= decay;
 		}
@@ -697,31 +697,31 @@ namespace cudaNoise {
 			switch (basis)
 			{
 			case(BASIS_CHECKER):
-				acc += checker(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed) * amp;
+				acc += checker(make_float3(pos.x * scale + 53872.1923f, pos.y * scale + 58334.4081f, pos.z * scale + 9358.34667f), 1.0f, seed) * amp;
 				break;
 			case(BASIS_DISCRETE):
-				acc += discreteNoise(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed) * amp;
+				acc += discreteNoise(make_float3(pos.x * scale + 7852.53114f, pos.y * scale + 319739.059f, pos.z * scale + 451336.504f), 1.0f, seed) * amp;
 				break;
 			case(BASIS_LINEARVALUE):
-				acc += linearValue(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed) * amp;
+				acc += linearValue(make_float3(pos.x * scale + 940.748139f, pos.y * scale + 10196.4500f, pos.z * scale + 25650.9789f), 1.0f, seed) * amp;
 				break;
 			case(BASIS_FADEDVALUE):
-				acc += fadedValue(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed) * amp;
+				acc += fadedValue(make_float3(pos.x * scale + 7683.26428f, pos.y * scale + 2417.78195f, pos.z * scale + 93889.4897f), 1.0f, seed) * amp;
 				break;
 			case(BASIS_CUBICVALUE):
-				acc += cubicValue(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed) * amp;
+				acc += cubicValue(make_float3(pos.x * scale + 6546.80178f, pos.y * scale + 14459.4682f, pos.z * scale + 11616.5811f), 1.0f, seed) * amp;
 				break;
 			case(BASIS_PERLIN):
-				acc += perlinNoise(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed) * amp;
+				acc += perlinNoise(make_float3(pos.x * scale + 1764.66931f, pos.y * scale + 2593.55017f, pos.z * scale + 4813.24412f), 1.0f, seed) * amp;
 				break;
 			case(BASIS_SIMPLEX):
-				acc += simplexNoise(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed) * amp;
+				acc += simplexNoise(make_float3(pos.x * scale + 7442.93020f, pos.y * scale + 8341.06698f, pos.z * scale + 66848.7870f), 1.0f, seed) * amp;
 				break;
 			case(BASIS_WORLEY):
-				acc += worleyNoise(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed, 0.1f, 4, 4, 1.0f) * amp;
+				acc += worleyNoise(make_float3(pos.x * scale + 7619.01285f, pos.y * scale + 57209.0681f, pos.z * scale + 1167.91397f), 1.0f, seed, 0.1f, 4, 4, 1.0f) * amp;
 				break;
 			case(BASIS_SPOTS):
-				acc += spots(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed, 0.1f, 0, 4, 1.0f, SHAPE_LINEAR) * amp;
+				acc += spots(make_float3(pos.x * scale + 33836.4116f, pos.y * scale + 2242.51045f, pos.z * scale + 6720.07486f), 1.0f, seed, 0.1f, 0, 4, 1.0f, SHAPE_LINEAR) * amp;
 				break;
 			}
 
@@ -744,7 +744,7 @@ namespace cudaNoise {
 
 		for (int i = 0; i < n; i++)
 		{
-			acc += simplexNoise(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed * (i + 1)) * amp;
+			acc += simplexNoise(make_float3(pos.x * scale + 617.437379f, pos.y * scale + 196410.219f, pos.z * scale + 321280.627f), 1.0f, seed * (i + 1)) * amp;
 			scale *= lacunarity;
 			amp *= decay;
 
