@@ -617,7 +617,7 @@ namespace cudaNoise {
 		return avg;
 	}
 
-	// Derived noise functions
+// Derived noise functions
 
 	// Fast function for fBm using perlin noise
 	__device__ float repeaterPerlin(float3 pos, float scale, int seed, int n, float lacunarity, float decay)
@@ -627,7 +627,7 @@ namespace cudaNoise {
 
 		for (int i = 0; i < n; i++)
 		{
-			acc += perlinNoise(make_float3(pos.x * scale + 6771.86937f, pos.y * scale + 5868.74465f, pos.z * scale + 386.830485f), 1.0f, seed * (i + 3)) * amp;
+			acc += perlinNoise(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, (i + 38) * 27389482) * amp;
 			scale *= lacunarity;
 			amp *= decay;
 		}
@@ -635,7 +635,29 @@ namespace cudaNoise {
 		return acc;
 	}
 
-	// Fast function for fBm using perlin absolute noise
+    // Fast function for fBm using perlin noise
+    __device__ float repeaterPerlinBounded(float3 pos, float scale, int seed, int n, float lacunarity, float decay, float threshold)
+    {
+        float acc = 1.0f;
+        float amp = 1.0f;
+
+        for (int i = 0; i < n; i++)
+        {
+            acc *= 1.0f - __saturatef(0.5f + 0.5f * perlinNoise(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed ^ ((i + 38) * 27389482))) * amp;
+
+            if(acc < threshold)
+            {
+                return 0.0f;
+            }
+
+            scale *= lacunarity;
+            amp *= decay;
+        }
+
+        return acc;
+    }
+
+    // Fast function for fBm using perlin absolute noise
 	// Originally called "turbulence", this method takes the absolute value of each octave before adding
 	__device__ float repeaterPerlinAbs(float3 pos, float scale, int seed, int n, float lacunarity, float decay)
 	{
@@ -644,7 +666,7 @@ namespace cudaNoise {
 
 		for (int i = 0; i < n; i++)
 		{
-			acc += fabsf(perlinNoise(make_float3(pos.x * scale + 8971.66955f, pos.y * scale + 94766.4536f, pos.z * scale + 38344.6818f), 1.0f, seed)) * amp;
+                        acc += fabsf(perlinNoise(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed)) * amp;
 			scale *= lacunarity;
 			amp *= decay;
 		}
@@ -677,7 +699,7 @@ namespace cudaNoise {
 
 		for (int i = 0; i < n; i++)
 		{
-			acc += fabsf(simplexNoise(make_float3(pos.x * scale + 32240.7922f, pos.y * scale + 835622.882f, pos.z * scale + 824.371968f), 1.0f, seed)) * amp * 0.35f;
+			acc += fabsf(simplexNoise(make_float3(pos.x, pos.y, pos.z), scale, seed)) * amp * 0.35f;
 			scale *= lacunarity;
 			amp *= decay;
 		}
@@ -685,7 +707,30 @@ namespace cudaNoise {
 		return mapToSigned(acc);
 	}
 
-	// Generic fBm repeater
+	// Bounded simplex repeater
+    __device__ float repeaterSimplexBounded(float3 pos, float scale, int seed, int n, float lacunarity, float decay, float threshold)
+    {
+        float acc = 1.0f;
+        float amp = 1.0f;
+
+        for (int i = 0; i < n; i++)
+        {
+            float val = __saturatef((simplexNoise(make_float3(pos.x * scale + 32240.7922f, pos.y * scale + 835622.882f, pos.z * scale + 824.371968f), 1.0f, seed) * 0.3f + 0.5f)) * amp;
+            acc -= val;
+
+            if(acc < threshold)
+            {
+                return 0.0f;
+            }
+
+            scale *= lacunarity;
+            amp *= decay;
+        }
+
+        return acc;
+    }
+
+    // Generic fBm repeater
 	// NOTE: about 10% slower than the dedicated repeater functions
 	__device__ float repeater(float3 pos, float scale, int seed, int n, float lacunarity, float decay, basisFunction basis)
 	{
