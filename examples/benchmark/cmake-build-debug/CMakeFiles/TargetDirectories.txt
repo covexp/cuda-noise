@@ -1,3 +1,0 @@
-/home/covex/code/cuda/cuda-noise/examples/benchmark/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/home/covex/code/cuda/cuda-noise/examples/benchmark/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/covex/code/cuda/cuda-noise/examples/benchmark/cmake-build-debug/CMakeFiles/benchmark.dir

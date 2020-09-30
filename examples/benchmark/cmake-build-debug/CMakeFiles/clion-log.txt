@@ -1,5 +1,0 @@
-/snap/clion/126/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CUDA_COMPILER=/usr/local/cuda-11.1/bin/nvcc -G "CodeBlocks - Unix Makefiles" /home/covex/code/cuda/cuda-noise/examples/benchmark
-NVCCFlags: -arch=sm_61 -use_fast_math --ptxas-options=-v,-O3
--- Configuring done
--- Generating done
--- Build files have been written to: /home/covex/code/cuda/cuda-noise/examples/benchmark/cmake-build-debug

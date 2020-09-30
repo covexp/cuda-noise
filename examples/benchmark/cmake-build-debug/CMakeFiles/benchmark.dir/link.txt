@@ -1,1 +1,0 @@
-/usr/bin/g++  CMakeFiles/benchmark.dir/main.cu.o CMakeFiles/benchmark.dir/cmake_device_link.o -o benchmark  -lcudadevrt -lcudart_static  -L"/usr/local/cuda-11.1/targets/x86_64-linux/lib/stubs" -L"/usr/local/cuda-11.1/targets/x86_64-linux/lib" -lrt -lpthread -ldl
