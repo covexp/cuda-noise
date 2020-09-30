@@ -61,6 +61,7 @@ int main()
     std::cout << "Benchmarking cuda-noise..." << std::endl;
 
     const size_t DIM = 4096;
+    const int iterations = 32;
 
     dim3 blockSize {16, 16};
     dim3 gridSize { static_cast<int>(DIM) / blockSize.x, static_cast<int>(DIM) / blockSize.y };
@@ -73,7 +74,7 @@ int main()
 
     {
         auto start = std::chrono::system_clock::now();
-        benchmarkPerlin<<<gridSize, blockSize>>>(d_outputBuffer, 32);
+        benchmarkPerlin<<<gridSize, blockSize>>>(d_outputBuffer, iterations);
         cudaDeviceSynchronize();
         auto end = std::chrono::system_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
@@ -85,7 +86,7 @@ int main()
 
     {
         auto start = std::chrono::system_clock::now();
-        benchmarkSimplex<<<gridSize, blockSize>>>(d_outputBuffer, 32);
+        benchmarkSimplex<<<gridSize, blockSize>>>(d_outputBuffer, iterations);
         cudaDeviceSynchronize();
         auto end = std::chrono::system_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);

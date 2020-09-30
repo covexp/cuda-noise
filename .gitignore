@@ -243,3 +243,7 @@ ModelManifest.xml
 
 # Cmake
 cmake-*
+
+# Jetbrains
+.idea/
+**/.idea/*
