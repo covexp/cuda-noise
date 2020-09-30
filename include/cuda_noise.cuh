@@ -155,9 +155,9 @@ namespace cudaNoise {
 
 	// Device constants for noise
 
-	__device__ __constant__ float gradMap[12][3] = { { 1.0f, 1.0f, 0.0f },{ -1.0f, 1.0f, 0.0f },{ 1.0f, -1.0f, 0.0f },{ -1.0f, -1.0f, 0.0f },
+	__device__ __constant__ float gradMap[16][3] = { { 1.0f, 1.0f, 0.0f },{ -1.0f, 1.0f, 0.0f },{ 1.0f, -1.0f, 0.0f },{ -1.0f, -1.0f, 0.0f },
 	{ 1.0f, 0.0f, 1.0f },{ -1.0f, 0.0f, 1.0f },{ 1.0f, 0.0f, -1.0f },{ -1.0f, 0.0f, -1.0f },
-	{ 0.0f, 1.0f, 1.0f },{ 0.0f, -1.0f, 1.0f },{ 0.0f, 1.0f, -1.0f },{ 0.0f, -1.0f, -1.0f } };
+	{ 0.0f, 1.0f, 1.0f },{ 0.0f, -1.0f, 1.0f },{ 0.0f, 1.0f, -1.0f },{ 0.0f, -1.0f, -1.0f }};
 
 	// Helper functions for noise
 
@@ -282,15 +282,10 @@ namespace cudaNoise {
 		float y3 = y0 - 1.0f + 3.0f*G3;
 		float z3 = z0 - 1.0f + 3.0f*G3;
 
-		// Work out the hashed gradient indices of the four simplex corners
-		int ii = i & 255;
-		int jj = j & 255;
-		int kk = k & 255;
-
-		int gi0 = calcPerm12(seed + ii + calcPerm(seed + jj + calcPerm(seed + kk)));
-		int gi1 = calcPerm12(seed + ii + i1 + calcPerm(seed + jj + j1 + calcPerm(seed + kk + k1)));
-		int gi2 = calcPerm12(seed + ii + i2 + calcPerm(seed + jj + j2 + calcPerm(seed + kk + k2)));
-		int gi3 = calcPerm12(seed + ii + 1 + calcPerm(seed + jj + 1 + calcPerm(seed + kk + 1)));
+        int gi0 = calcPerm12(seed + (i * 607495) + (j * 359609) + (k * 654846));
+        int gi1 = calcPerm12(seed + (i + i1) * 607495 + (j + j1) * 359609 + (k + k1) * 654846);
+        int gi2 = calcPerm12(seed + (i + i2) * 607495 + (j + j2) * 359609 + (k + k2) * 654846);
+        int gi3 = calcPerm12(seed + (i + 1) * 607495 + (j + 1) * 359609 + (k + 1) * 654846);
 
 		// Calculate the contribution from the four corners
 		float t0 = 0.6f - x0 * x0 - y0 * y0 - z0 * z0;
