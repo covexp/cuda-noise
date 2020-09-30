@@ -240,3 +240,10 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
+
+# Cmake
+cmake-*
+
+# Jetbrains
+.idea/
+**/.idea/*
