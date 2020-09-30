@@ -1,0 +1,1 @@
+/usr/local/cuda-11.1/bin/nvcc -forward-unknown-to-host-compiler  -arch=sm_61 -use_fast_math --ptxas-options=-v,-O3 -O3 -DNDEBUG -Xcompiler=-fPIC -Wno-deprecated-gpu-targets -shared -dlink CMakeFiles/benchmark.dir/main.cu.o -o CMakeFiles/benchmark.dir/cmake_device_link.o  -lcudadevrt -lcudart_static 

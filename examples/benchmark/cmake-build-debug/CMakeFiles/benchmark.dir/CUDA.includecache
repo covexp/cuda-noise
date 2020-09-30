@@ -1,0 +1,20 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/covex/code/cuda/cuda-noise/examples/benchmark/main.cu
+iostream
+-
+chrono
+-
+../../include/cuda_noise.cuh
+/home/covex/code/cuda/cuda-noise/include/cuda_noise.cuh
+
+/home/covex/code/cuda/cuda-noise/include/cuda_noise.cuh
+cuda_runtime.h
+-
+
