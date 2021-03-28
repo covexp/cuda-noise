@@ -10,7 +10,7 @@ namespace cudaNoise
 constexpr float EPSILON = 0.000000001f;
 
 // Basis functions
-typedef enum
+enum class BasisFunction : int
 {
     BASIS_CHECKER,
     BASIS_DISCRETE,
@@ -21,26 +21,25 @@ typedef enum
     BASIS_SIMPLEX,
     BASIS_WORLEY,
     BASIS_SPOTS
-} basisFunction;
+};
 
 // Shaping functions
-typedef enum
+enum class profileShape : int
 {
     SHAPE_STEP,
     SHAPE_LINEAR,
     SHAPE_QUADRATIC
-} profileShape;
+};
 
 // Function blending operators
-typedef enum
+enum class repeatOperator : int
 {
     OPERATOR_ADD,
     OPERATOR_AVG,
     OPERATOR_MUL,
     OPERATOR_MAX,
     OPERATOR_MIN
-} repeatOperator;
-
+};
 
 // Utility functions
 
@@ -453,17 +452,17 @@ __device__ float spots(float3 pos, float scale, int seed, float size, int minNum
 
                                     switch (shape)
                                         {
-                                            case (SHAPE_STEP):
+                                            case (profileShape::SHAPE_STEP):
                                                 if (distanceSq < size)
                                                     val = fmaxf(val, 1.0f);
                                                 else
                                                     val = fmaxf(val, -1.0f);
                                                 break;
-                                            case (SHAPE_LINEAR):
+                                            case (profileShape::SHAPE_LINEAR):
                                                 distanceAbs = fabsf(distU) + fabsf(distV) + fabsf(distW);
                                                 val = fmaxf(val, 1.0f - clamp(distanceAbs, 0.0f, size) / size);
                                                 break;
-                                            case (SHAPE_QUADRATIC):
+                                            case (profileShape::SHAPE_QUADRATIC):
                                                 val = fmaxf(val, 1.0f - clamp(distanceSq, 0.0f, size) / size);
                                                 break;
                                         }
@@ -812,7 +811,7 @@ __device__ float repeaterSimplexBounded(float3 pos, float scale, int seed, int n
 
 // Generic fBm repeater
 // NOTE: about 10% slower than the dedicated repeater functions
-__device__ float repeater(float3 pos, float scale, int seed, int n, float lacunarity, float decay, basisFunction basis)
+__device__ float repeater(float3 pos, float scale, int seed, int n, float lacunarity, float decay, BasisFunction basis)
 {
     float acc = 0.0f;
     float amp = 1.0f;
@@ -821,32 +820,32 @@ __device__ float repeater(float3 pos, float scale, int seed, int n, float lacuna
         {
             switch (basis)
                 {
-                    case (BASIS_CHECKER):
+                    case (BasisFunction::BASIS_CHECKER):
                         acc += checker(make_float3(pos.x * scale + 53872.1923f, pos.y * scale + 58334.4081f, pos.z * scale + 9358.34667f), 1.0f, seed) * amp;
                         break;
-                    case (BASIS_DISCRETE):
+                    case (BasisFunction::BASIS_DISCRETE):
                         acc += discreteNoise(make_float3(pos.x * scale + 7852.53114f, pos.y * scale + 319739.059f, pos.z * scale + 451336.504f), 1.0f, seed) * amp;
                         break;
-                    case (BASIS_LINEARVALUE):
+                    case (BasisFunction::BASIS_LINEARVALUE):
                         acc += linearValue(make_float3(pos.x * scale + 940.748139f, pos.y * scale + 10196.4500f, pos.z * scale + 25650.9789f), 1.0f, seed) * amp;
                         break;
-                    case (BASIS_FADEDVALUE):
+                    case (BasisFunction::BASIS_FADEDVALUE):
                         acc += fadedValue(make_float3(pos.x * scale + 7683.26428f, pos.y * scale + 2417.78195f, pos.z * scale + 93889.4897f), 1.0f, seed) * amp;
                         break;
-                    case (BASIS_CUBICVALUE):
+                    case (BasisFunction::BASIS_CUBICVALUE):
                         acc += cubicValue(make_float3(pos.x * scale + 6546.80178f, pos.y * scale + 14459.4682f, pos.z * scale + 11616.5811f), 1.0f, seed) * amp;
                         break;
-                    case (BASIS_PERLIN):
+                    case (BasisFunction::BASIS_PERLIN):
                         acc += perlinNoise(make_float3(pos.x * scale + 1764.66931f, pos.y * scale + 2593.55017f, pos.z * scale + 4813.24412f), 1.0f, seed) * amp;
                         break;
-                    case (BASIS_SIMPLEX):
+                    case (BasisFunction::BASIS_SIMPLEX):
                         acc += simplexNoise(make_float3(pos.x * scale + 7442.93020f, pos.y * scale + 8341.06698f, pos.z * scale + 66848.7870f), 1.0f, seed) * amp;
                         break;
-                    case (BASIS_WORLEY):
+                    case (BasisFunction::BASIS_WORLEY):
                         acc += worleyNoise(make_float3(pos.x * scale + 7619.01285f, pos.y * scale + 57209.0681f, pos.z * scale + 1167.91397f), 1.0f, seed, 0.1f, 4, 4, 1.0f) * amp;
                         break;
-                    case (BASIS_SPOTS):
-                        acc += spots(make_float3(pos.x * scale + 33836.4116f, pos.y * scale + 2242.51045f, pos.z * scale + 6720.07486f), 1.0f, seed, 0.1f, 0, 4, 1.0f, SHAPE_LINEAR) * amp;
+                    case (BasisFunction::BASIS_SPOTS):
+                        acc += spots(make_float3(pos.x * scale + 33836.4116f, pos.y * scale + 2242.51045f, pos.z * scale + 6720.07486f), 1.0f, seed, 0.1f, 0, 4, 1.0f, profileShape::SHAPE_LINEAR) * amp;
                         break;
                 }
 
@@ -882,41 +881,41 @@ __device__ float fractalSimplex(float3 pos, float scale, int seed, float du, int
 
 // Generic turbulence function
 // Uses a first pass of noise to offset the input vectors for the second pass
-__device__ float turbulence(float3 pos, float scaleIn, float scaleOut, int seed, float strength, basisFunction inFunc, basisFunction outFunc)
+__device__ float turbulence(float3 pos, float scaleIn, float scaleOut, int seed, float strength, BasisFunction inFunc, BasisFunction outFunc)
 {
     switch (inFunc)
         {
-            case (BASIS_CHECKER):
+            case (BasisFunction::BASIS_CHECKER):
                 pos.x += checker(pos, scaleIn, seed ^ 0x34ff8885) * strength;
                 pos.y += checker(pos, scaleIn, seed ^ 0x2d03cba3) * strength;
                 pos.z += checker(pos, scaleIn, seed ^ 0x5a76fb1b) * strength;
                 break;
-            case (BASIS_LINEARVALUE):
+            case (BasisFunction::BASIS_LINEARVALUE):
                 pos.x += linearValue(pos, scaleIn, seed ^ 0x5527fdb8) * strength;
                 pos.y += linearValue(pos, scaleIn, seed ^ 0x42af1a2e) * strength;
                 pos.z += linearValue(pos, scaleIn, seed ^ 0x1482ee8c) * strength;
                 break;
-            case (BASIS_FADEDVALUE):
+            case (BasisFunction::BASIS_FADEDVALUE):
                 pos.x += fadedValue(pos, scaleIn, seed ^ 0x295590fc) * strength;
                 pos.y += fadedValue(pos, scaleIn, seed ^ 0x30731854) * strength;
                 pos.z += fadedValue(pos, scaleIn, seed ^ 0x73d2ca4c) * strength;
                 break;
-            case (BASIS_CUBICVALUE):
+            case (BasisFunction::BASIS_CUBICVALUE):
                 pos.x += cubicValue(pos, scaleIn, seed ^ 0x663a1f09) * strength;
                 pos.y += cubicValue(pos, scaleIn, seed ^ 0x429bf56b) * strength;
                 pos.z += cubicValue(pos, scaleIn, seed ^ 0x37fa6fe9) * strength;
                 break;
-            case (BASIS_PERLIN):
+            case (BasisFunction::BASIS_PERLIN):
                 pos.x += perlinNoise(pos, scaleIn, seed ^ 0x74827384) * strength;
                 pos.y += perlinNoise(pos, scaleIn, seed ^ 0x10938478) * strength;
                 pos.z += perlinNoise(pos, scaleIn, seed ^ 0x62723883) * strength;
                 break;
-            case (BASIS_SIMPLEX):
+            case (BasisFunction::BASIS_SIMPLEX):
                 pos.x += simplexNoise(pos, scaleIn, seed ^ 0x47829472) * strength;
                 pos.y += simplexNoise(pos, scaleIn, seed ^ 0x58273829) * strength;
                 pos.z += simplexNoise(pos, scaleIn, seed ^ 0x10294647) * strength;
                 break;
-            case (BASIS_WORLEY):
+            case (BasisFunction::BASIS_WORLEY):
                 pos.x += worleyNoise(pos, scaleIn, seed ^ 0x1d96f515, 1.0f, 4, 4, 1.0f) * strength;
                 pos.y += worleyNoise(pos, scaleIn, seed ^ 0x4df308f0, 1.0f, 4, 4, 1.0f) * strength;
                 pos.z += worleyNoise(pos, scaleIn, seed ^ 0x2b79442a, 1.0f, 4, 4, 1.0f) * strength;
@@ -925,19 +924,19 @@ __device__ float turbulence(float3 pos, float scaleIn, float scaleOut, int seed,
 
     switch (outFunc)
         {
-            case (BASIS_CHECKER):
+            case (BasisFunction::BASIS_CHECKER):
                 return checker(pos, scaleOut, seed);
-            case (BASIS_LINEARVALUE):
+            case (BasisFunction::BASIS_LINEARVALUE):
                 return linearValue(pos, scaleOut, seed);
-            case (BASIS_FADEDVALUE):
+            case (BasisFunction::BASIS_FADEDVALUE):
                 return fadedValue(pos, scaleOut, seed);
-            case (BASIS_CUBICVALUE):
+            case (BasisFunction::BASIS_CUBICVALUE):
                 return cubicValue(pos, scaleOut, seed);
-            case (BASIS_PERLIN):
+            case (BasisFunction::BASIS_PERLIN):
                 return perlinNoise(pos, scaleOut, seed);
-            case (BASIS_SIMPLEX):
+            case (BasisFunction::BASIS_SIMPLEX):
                 return simplexNoise(pos, scaleIn, seed);
-            case (BASIS_WORLEY):
+            case (BasisFunction::BASIS_WORLEY):
                 return worleyNoise(pos, scaleIn, seed, 1.0f, 4, 4, 1.0f);
         }
 
@@ -945,7 +944,7 @@ __device__ float turbulence(float3 pos, float scaleIn, float scaleOut, int seed,
 }
 
 // Turbulence using repeaters for the first and second pass
-__device__ float repeaterTurbulence(float3 pos, float scaleIn, float scaleOut, int seed, float strength, int n, basisFunction basisIn, basisFunction basisOut)
+__device__ float repeaterTurbulence(float3 pos, float scaleIn, float scaleOut, int seed, float strength, int n, BasisFunction basisIn, BasisFunction basisOut)
 {
     pos.x += (repeater(make_float3(pos.x, pos.y, pos.z), scaleIn, seed ^ 0x41728394, n, 2.0f, 0.5f, basisIn)) * strength;
     pos.y += (repeater(make_float3(pos.x, pos.y, pos.z), scaleIn, seed ^ 0x72837263, n, 2.0f, 0.5f, basisIn)) * strength;
