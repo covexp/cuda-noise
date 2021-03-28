@@ -70,6 +70,17 @@ namespace cudaNoise {
 		return ((float)noiseVal / (float)0xffffffff);
 	}
 
+    __device__ float3 fastRandomFloat3(unsigned int seed)
+    {
+        unsigned int noiseVal = hash(seed);
+
+        float x = (float)(noiseVal & 0x00000fff) / 4096.0f;
+        float y = (float)(noiseVal & 0x00fff000 >> 12) / 4096.0f;
+        float z = (float)(noiseVal >> 24) / 256.0f;
+
+        return make_float3(x, y, z);
+    }
+
 	// Clamps val between [min, max]
 	__device__ float clamp(float val, float min, float max)
 	{
@@ -390,11 +401,8 @@ namespace cudaNoise {
 	}
 
 	// Worley cellular noise
-	__device__ float worleyNoise(float3 pos, float scale, int seed, float size, int minNum, int maxNum, float jitter)
+	__device__ float worleyNoise(float3 pos, float scale, unsigned int seed, float size, int minNum, int maxNum, float jitter)
 	{
-		if (size < EPSILON)
-			return 0.0f;
-
 		int ix = (int)(pos.x * scale);
 		int iy = (int)(pos.y * scale);
 		int iz = (int)(pos.z * scale);
@@ -412,18 +420,18 @@ namespace cudaNoise {
 			{
 				for (int z = -1; z < 2; z++)
 				{
-					int numPoints = randomIntRange(minNum, maxNum, seed + (ix + x) * 823746.0f + (iy + y) * 12306.0f + (iz + z) * 67262.0f);
+					int numPoints = randomIntRange(minNum, maxNum, seed ^ ((ix + x + 723842u) * 872342u) ^ ((iy + y + 183724u) * 823742u) ^ ((iz + z + 423528u) * 12657u));
 
 					for (int i = 0; i < numPoints; i++)
 					{
-						float distU = u - x - (randomFloat(seed + (ix + x) * 23784.0f + (iy + y) * 9183.0f + (iz + z) * 23874.0f * i + 27432.0f) * jitter - jitter / 2.0f);
-						float distV = v - y - (randomFloat(seed + (ix + x) * 12743.0f + (iy + y) * 45191.0f + (iz + z) * 144421.0f * i + 76671.0f) * jitter - jitter / 2.0f);
-						float distW = w - z - (randomFloat(seed + (ix + x) * 82734.0f + (iy + y) * 900213.0f + (iz + z) * 443241.0f * i + 199823.0f) * jitter - jitter / 2.0f);
+                        float3 rnd3 = fastRandomFloat3(seed ^ ((ix + x + 273282u) * 1934578u) ^ ((iy + y + 523482u) * 972223u) ^ ((iz + z + 2872345u) * 7224356u));
+						float distU = u - x - (rnd3.x * jitter - jitter / 2.0f);
+						float distV = v - y - (rnd3.y * jitter - jitter / 2.0f);
+						float distW = w - z - (rnd3.z * jitter - jitter / 2.0f);
 
 						float distanceSq = distU * distU + distV * distV + distW * distW;
 
-						if (distanceSq < minDist)
-							minDist = distanceSq;
+                        minDist = fminf(minDist, distanceSq);
 					}
 				}
 			}
