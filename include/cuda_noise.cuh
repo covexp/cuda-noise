@@ -1074,5 +1074,28 @@ __device__ float fbmAbs(float3 pos, float scale, int seed, int n, float lacunari
     return mapToSigned(acc);
 }
 
+template <class Basis>
+__device__ float recurrent(float3 pos, float scale, int seed, int n, float lacunarity, float decay, float turbulence)
+{
+    float acc = 0.0f;
+    float amp = 1.0f;
+
+    for(int i = 0; i < n; i++)
+    {
+        float4 pt = fastRandomFloat4(seed ^ ((i + 324981) * 12348));
+
+        acc += __sample<Basis>(pos, scale, seed) * amp * 0.5f;
+
+        pos.x += pt.x * acc * turbulence * amp;
+        pos.y += pt.y * acc * turbulence * amp;
+        pos.z += pt.z * acc * turbulence * amp;
+
+        scale *= lacunarity * (pt.w + 0.5f);
+        amp *= decay;
+        seed = seed ^ ((i + 198273) * 928374);
+    }
+
+    return acc;
+}
 
 } // namespace cudaNoise
