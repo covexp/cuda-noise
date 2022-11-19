@@ -8,13 +8,13 @@ the input vector for other noise functions for turbulence effects.
 
 ## Basis functions
 
-![basis functions](http://covex.info/images/cudanoise_montage.jpg "Basis functions")
+![montage](https://user-images.githubusercontent.com/6199226/202872480-512ab0ef-7210-4eff-8c3c-8179701e1f1e.jpg "Basis functions")
 
 *Basis functions include: discrete noise, tricubic value noise, perlin gradient noise, simplex noise, spots and worley noise.*
 
 ## Derived functions
 
-![repeater turbulence](http://covex.info/images/cudanoise.png "Repeater turbulence")
+![cudanoise](https://user-images.githubusercontent.com/6199226/202872441-bc67fadf-ae3f-44ac-afa1-b65eb60a8562.png "Repeater turbulence")
 
 *Repeater turbulence of perlin noise functions.*
 
