@@ -20,7 +20,9 @@ the input vector for other noise functions for turbulence effects.
 
 ## Usage
 
-cudaNoise comes as a single-header include library. Simply include cuda_noise.cuh in your CUDA source file, then call the cudaNoise functions from kernel or device functions. (Note: cudaNoise is not meant to be directly called from host code)
+cudaNoise comes as a single-header include library. Simply include cuda_noise.cuh in your CUDA source file, then call the cudaNoise functions from kernel or device functions. 
+
+**NOTE: cudaNoise is designed to be used from inside CUDA kernels and cannot directly be called from host code**
 
 There is a simple texture viewer included in the /examples directory.
 
@@ -30,32 +32,57 @@ There is a simple texture viewer included in the /examples directory.
 
 #### 3D Checker pattern
 
+```cpp
 float checker(float3 pos, float scale, int seed)
+```
 
 #### 3D Discrete noise
 
+```cpp
 float discreteNoise(float3 pos, float scale, int seed)
+```
 
 #### 3D Linear value noise
 
+```cpp
 float linearValue(float3 pos, float scale, int seed)
+```
 
 #### 3D Cubic value noise
 
+```cpp
 float cubicValue(float3 pos, float scale, int seed)
+```
 
 #### 3D Perlin gradient noise
 
+```cpp
 float perlinNoise(float3 pos, float scale, int seed)
+```
 
 #### 3D Simplex noise
 
+```cpp
 float simplexNoise(float3 pos, float scale, int seed)
+```
 
 #### 3D Worley cellular noise
 
+```cpp
 float worleyNoise(float3 pos, float scale, int seed, float size, int minNum, int maxNum, float jitter)
+```
 
 #### 3D Spots
 
+```cpp
 float spots(float3 pos, float scale, int seed, float size, int minNum, int maxNum, float jitter, profileShape shape)
+```
+
+## TODO
+
+- Implement 4D noise functions.
+- Optimization work.
+- Add more types of cellular functions.
+- Cleaning up the interface.
+
+Contributions are more than welcome!
