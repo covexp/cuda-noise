@@ -7,30 +7,46 @@
 
 namespace cudaNoise
 {
-
 struct BasisChecker;
-struct BasisDiscrete;
-struct BasisLinearValue;
-struct BasisFadedValue;
 struct BasisCubicValue;
+struct BasisDiscrete;
+struct BasisFadedValue;
+struct BasisLinearValue;
 struct BasisPerlin;
 struct BasisSimplex;
-struct BasisWorley;
 struct BasisSpots;
+struct BasisWorley;
 
-// Basis functions
-typedef enum
+namespace Basis
 {
-    BASIS_CHECKER,
-    BASIS_DISCRETE,
-    BASIS_LINEARVALUE,
-    BASIS_FADEDVALUE,
-    BASIS_CUBICVALUE,
-    BASIS_PERLIN,
-    BASIS_SIMPLEX,
-    BASIS_WORLEY,
-    BASIS_SPOTS
-} basisFunction;
+    struct Checker
+    {
+    };
+    struct Discrete
+    {
+    };
+    struct LinearValue
+    {
+    };
+    struct FadedValue
+    {
+    };
+    struct CubicValue
+    {
+    };
+    struct Perlin
+    {
+    };
+    struct Simplex
+    {
+    };
+    struct Worley
+    {
+    };
+    struct Spots
+    {
+    };
+}
 
 // Shaping functions
 typedef enum
@@ -110,10 +126,10 @@ __device__ float4 fastRandomFloat4(unsigned int seed)
 // Clamps val between [min, max]
 __device__ float clamp(float val, float min, float max)
 {
-    if (val < 0.0f)
-        return 0.0f;
-    else if (val > 1.0f)
-        return 1.0f;
+    if (val < min)
+        return min;
+    else if (val > max)
+        return max;
 
     return val;
 }
@@ -255,16 +271,6 @@ __device__ float grad(int hash, float x, float y, float z)
                 return 0; // never happens
         }
 }
-
-// Gradient function
-//__device__ float4 grad(int hash, float x, float y, float z, float t)
-//{
-//    int h = hash & 31;
-//    float u = h < 24 ? x : y;
-//    float v = h < 16 ? y : z;
-//    float w = h < 8 ? z : t;
-//    return make_float4((h & 1 ? -u : u), (h & 2 ? -v : v), (h & 4 ? -w : w), 0.0f);
-//}
 
 __device__ float grad(int hash, float x, float y, float z, float w)
 {
@@ -486,7 +492,9 @@ __device__ float checker(float3 pos, float scale, int seed)
     int iz = (int)(pos.z * scale);
 
     if ((ix + iy + iz) % 2 == 0)
-        return 1.0f;
+    {
+            return 1.0f;
+        }
 
     return -1.0f;
 }
@@ -1128,338 +1136,80 @@ __device__ float perlinNoise(float4 pos, float scale, int seed)
 
 // Derived noise functions
 
-// Fast function for fBm using perlin noise
-__device__ float repeaterPerlin(float3 pos, float scale, int seed, int n, float lacunarity, float decay)
-{
-    float acc = 0.0f;
-    float amp = 1.0f;
+// Sampling functions are defined as overloads of __sample() with the basis function marker as the first parameter
 
-    for (int i = 0; i < n; i++)
-        {
-            acc += perlinNoise(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, (i + 38) * 27389482) * amp;
-            scale *= lacunarity;
-            amp *= decay;
-        }
+// Sample Perlin gradient noise
+//template <typename ...Args>
+//__device__ float __sample(Basis::Perlin basis, Args&&... args)
+//{
+//    return perlinNoise(args...);
+//}
 
-    return acc;
-}
-
-// Fast function for fBm using perlin noise
-__device__ float repeaterPerlinBounded(float3 pos, float scale, int seed, int n, float lacunarity, float decay, float threshold)
-{
-    float acc = 1.0f;
-    float amp = 1.0f;
-
-    for (int i = 0; i < n; i++)
-        {
-            acc *= 1.0f - __saturatef(0.5f + 0.5f * perlinNoise(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed ^ ((i + 38) * 27389482))) * amp;
-
-            if (acc < threshold)
-                {
-                    return 0.0f;
-                }
-
-            scale *= lacunarity;
-            amp *= decay;
-        }
-
-    return acc;
-}
-
-// Fast function for fBm using perlin absolute noise
-// Originally called "turbulence", this method takes the absolute value of each octave before adding
-__device__ float repeaterPerlinAbs(float3 pos, float scale, int seed, int n, float lacunarity, float decay)
-{
-    float acc = 0.0f;
-    float amp = 1.0f;
-
-    for (int i = 0; i < n; i++)
-        {
-            acc += fabsf(perlinNoise(make_float3(pos.x * scale, pos.y * scale, pos.z * scale), 1.0f, seed)) * amp;
-            scale *= lacunarity;
-            amp *= decay;
-        }
-
-    // Map the noise back to the standard expected range [-1, 1]
-    return mapToSigned(acc);
-}
-
-// Fast function for fBm using simplex noise
-__device__ float repeaterSimplex(float3 pos, float scale, int seed, int n, float lacunarity, float decay)
-{
-    float acc = 0.0f;
-    float amp = 1.0f;
-
-    for (int i = 0; i < n; i++)
-        {
-            acc += simplexNoise(make_float3(pos.x, pos.y, pos.z), scale, seed) * amp * 0.35f;
-            scale *= lacunarity;
-            amp *= decay;
-            seed = seed ^ ((i + 672381) * 200394);
-        }
-
-    return acc;
-}
-
-// Fast function for fBm using simplex absolute noise
-__device__ float repeaterSimplexAbs(float3 pos, float scale, int seed, int n, float lacunarity, float decay)
-{
-    float acc = 0.0f;
-    float amp = 1.0f;
-
-    for (int i = 0; i < n; i++)
-        {
-            acc += fabsf(simplexNoise(make_float3(pos.x, pos.y, pos.z), scale, seed)) * amp * 0.35f;
-            scale *= lacunarity;
-            amp *= decay;
-            seed = seed ^ ((i + 198273) * 928374);
-        }
-
-    return mapToSigned(acc);
-}
-
-// Bounded simplex repeater
-__device__ float repeaterSimplexBounded(float3 pos, float scale, int seed, int n, float lacunarity, float decay, float threshold)
-{
-    float acc = 1.0f;
-    float amp = 1.0f;
-
-    for (int i = 0; i < n; i++)
-        {
-            float val = __saturatef((simplexNoise(make_float3(pos.x * scale + 32240.7922f, pos.y * scale + 835622.882f, pos.z * scale + 824.371968f), 1.0f, seed) * 0.3f + 0.5f)) * amp;
-            acc -= val;
-
-            if (acc < threshold)
-                {
-                    return 0.0f;
-                }
-
-            scale *= lacunarity;
-            amp *= decay;
-        }
-
-    return acc;
-}
-
-// Generic fBm repeater
-// NOTE: about 10% slower than the dedicated repeater functions
-__device__ float repeater(float3 pos, float scale, int seed, int n, float lacunarity, float decay, basisFunction basis)
-{
-    float acc = 0.0f;
-    float amp = 1.0f;
-
-    for (int i = 0; i < n; i++)
-        {
-            switch (basis)
-                {
-                    case (BASIS_CHECKER):
-                        acc += checker(make_float3(pos.x * scale + 53872.1923f, pos.y * scale + 58334.4081f, pos.z * scale + 9358.34667f), 1.0f, seed) * amp;
-                        break;
-                    case (BASIS_DISCRETE):
-                        acc += discreteNoise(make_float3(pos.x * scale + 7852.53114f, pos.y * scale + 319739.059f, pos.z * scale + 451336.504f), 1.0f, seed) * amp;
-                        break;
-                    case (BASIS_LINEARVALUE):
-                        acc += linearValue(make_float3(pos.x * scale + 940.748139f, pos.y * scale + 10196.4500f, pos.z * scale + 25650.9789f), 1.0f, seed) * amp;
-                        break;
-                    case (BASIS_FADEDVALUE):
-                        acc += fadedValue(make_float3(pos.x * scale + 7683.26428f, pos.y * scale + 2417.78195f, pos.z * scale + 93889.4897f), 1.0f, seed) * amp;
-                        break;
-                    case (BASIS_CUBICVALUE):
-                        acc += cubicValue(make_float3(pos.x * scale + 6546.80178f, pos.y * scale + 14459.4682f, pos.z * scale + 11616.5811f), 1.0f, seed) * amp;
-                        break;
-                    case (BASIS_PERLIN):
-                        acc += perlinNoise(make_float3(pos.x * scale + 1764.66931f, pos.y * scale + 2593.55017f, pos.z * scale + 4813.24412f), 1.0f, seed) * amp;
-                        break;
-                    case (BASIS_SIMPLEX):
-                        acc += simplexNoise(make_float3(pos.x * scale + 7442.93020f, pos.y * scale + 8341.06698f, pos.z * scale + 66848.7870f), 1.0f, seed) * amp;
-                        break;
-                    case (BASIS_WORLEY):
-                        acc += worleyNoise(make_float3(pos.x * scale + 7619.01285f, pos.y * scale + 57209.0681f, pos.z * scale + 1167.91397f), 1.0f, seed, 0.1f, 4, 4, 1.0f) * amp;
-                        break;
-                    case (BASIS_SPOTS):
-                        acc += spots(make_float3(pos.x * scale + 33836.4116f, pos.y * scale + 2242.51045f, pos.z * scale + 6720.07486f), 1.0f, seed, 0.1f, 0, 4, 1.0f, SHAPE_LINEAR) * amp;
-                        break;
-                }
-
-            scale *= lacunarity;
-            amp *= decay;
-        }
-
-    return acc;
-}
-
-// Fractal Simplex noise
-// Unlike the repeater function, which calculates a fixed number of noise octaves, the fractal function continues until
-// the feature size is smaller than one pixel
-__device__ float fractalSimplex(float3 pos, float scale, int seed, float du, int n, float lacunarity, float decay)
-{
-    float acc = 0.0f;
-    float amp = 1.0f;
-
-    float rdu = 1.0f / du;
-
-    for (int i = 0; i < n; i++)
-        {
-            acc += simplexNoise(make_float3(pos.x * scale + 617.437379f, pos.y * scale + 196410.219f, pos.z * scale + 321280.627f), 1.0f, seed * (i + 1)) * amp;
-            scale *= lacunarity;
-            amp *= decay;
-
-            if (scale > rdu)
-                break;
-        }
-
-    return acc;
-}
-
-// Generic turbulence function
-// Uses a first pass of noise to offset the input vectors for the second pass
-__device__ float turbulence(float3 pos, float scaleIn, float scaleOut, int seed, float strength, basisFunction inFunc, basisFunction outFunc)
-{
-    switch (inFunc)
-        {
-            case (BASIS_CHECKER):
-                pos.x += checker(pos, scaleIn, seed ^ 0x34ff8885) * strength;
-                pos.y += checker(pos, scaleIn, seed ^ 0x2d03cba3) * strength;
-                pos.z += checker(pos, scaleIn, seed ^ 0x5a76fb1b) * strength;
-                break;
-            case (BASIS_LINEARVALUE):
-                pos.x += linearValue(pos, scaleIn, seed ^ 0x5527fdb8) * strength;
-                pos.y += linearValue(pos, scaleIn, seed ^ 0x42af1a2e) * strength;
-                pos.z += linearValue(pos, scaleIn, seed ^ 0x1482ee8c) * strength;
-                break;
-            case (BASIS_FADEDVALUE):
-                pos.x += fadedValue(pos, scaleIn, seed ^ 0x295590fc) * strength;
-                pos.y += fadedValue(pos, scaleIn, seed ^ 0x30731854) * strength;
-                pos.z += fadedValue(pos, scaleIn, seed ^ 0x73d2ca4c) * strength;
-                break;
-            case (BASIS_CUBICVALUE):
-                pos.x += cubicValue(pos, scaleIn, seed ^ 0x663a1f09) * strength;
-                pos.y += cubicValue(pos, scaleIn, seed ^ 0x429bf56b) * strength;
-                pos.z += cubicValue(pos, scaleIn, seed ^ 0x37fa6fe9) * strength;
-                break;
-            case (BASIS_PERLIN):
-                pos.x += perlinNoise(pos, scaleIn, seed ^ 0x74827384) * strength;
-                pos.y += perlinNoise(pos, scaleIn, seed ^ 0x10938478) * strength;
-                pos.z += perlinNoise(pos, scaleIn, seed ^ 0x62723883) * strength;
-                break;
-            case (BASIS_SIMPLEX):
-                pos.x += simplexNoise(pos, scaleIn, seed ^ 0x47829472) * strength;
-                pos.y += simplexNoise(pos, scaleIn, seed ^ 0x58273829) * strength;
-                pos.z += simplexNoise(pos, scaleIn, seed ^ 0x10294647) * strength;
-                break;
-            case (BASIS_WORLEY):
-                pos.x += worleyNoise(pos, scaleIn, seed ^ 0x1d96f515, 1.0f, 4, 4, 1.0f) * strength;
-                pos.y += worleyNoise(pos, scaleIn, seed ^ 0x4df308f0, 1.0f, 4, 4, 1.0f) * strength;
-                pos.z += worleyNoise(pos, scaleIn, seed ^ 0x2b79442a, 1.0f, 4, 4, 1.0f) * strength;
-                break;
-        }
-
-    switch (outFunc)
-        {
-            case (BASIS_CHECKER):
-                return checker(pos, scaleOut, seed);
-            case (BASIS_LINEARVALUE):
-                return linearValue(pos, scaleOut, seed);
-            case (BASIS_FADEDVALUE):
-                return fadedValue(pos, scaleOut, seed);
-            case (BASIS_CUBICVALUE):
-                return cubicValue(pos, scaleOut, seed);
-            case (BASIS_PERLIN):
-                return perlinNoise(pos, scaleOut, seed);
-            case (BASIS_SIMPLEX):
-                return simplexNoise(pos, scaleIn, seed);
-            case (BASIS_WORLEY):
-                return worleyNoise(pos, scaleIn, seed, 1.0f, 4, 4, 1.0f);
-        }
-
-    return 0.0f;
-}
-
-// Turbulence using repeaters for the first and second pass
-__device__ float repeaterTurbulence(float3 pos, float scaleIn, float scaleOut, int seed, float strength, int n, basisFunction basisIn, basisFunction basisOut)
-{
-    pos.x += (repeater(make_float3(pos.x, pos.y, pos.z), scaleIn, seed ^ 0x41728394, n, 2.0f, 0.5f, basisIn)) * strength;
-    pos.y += (repeater(make_float3(pos.x, pos.y, pos.z), scaleIn, seed ^ 0x72837263, n, 2.0f, 0.5f, basisIn)) * strength;
-    pos.z += (repeater(make_float3(pos.x, pos.y, pos.z), scaleIn, seed ^ 0x26837363, n, 2.0f, 0.5f, basisIn)) * strength;
-
-    return repeater(pos, scaleOut, seed ^ 0x3f821dab, n, 2.0f, 0.5f, basisOut);
-}
-
-template <typename Basis, typename ...Args>
+// Sample Simplex noise
+template <typename BasisSimplex, typename... Args>
 __device__ float __sample(Args&&... args)
 {
-    return 0.0f;
+    return simplexNoise(std::forward<Args>(args)...);
 }
 
-template <>
-__device__ float __sample<BasisPerlin>(Args... args)
-{
-    return perlinNoise(std::forward<Args>(args));
-}
+// Sample Spots noise
+//template <typename... Args>
+//__device__ float __sample(Basis::Spots basis, Args &&...args)
+//{
+//    return spots(args...);
+//}
+//
+//// Sample Checker noise
+//template <typename... Args>
+//__device__ float __sample<Basis::Checker>(Args &&...args)
+//{
+//    return checker(args...);
+//}
+//
+//// Sample Discrete noise
+//template <typename... Args>
+//__device__ float __sample(Basis::Discrete basis, Args &&...args)
+//{
+//    return discreteNoise(args...);
+//}
+//
+//// Sample linear value noise
+//template <typename... Args>
+//__device__ float __sample(Basis::LinearValue basis, Args &&...args)
+//{
+//    return linearValue(args...);
+//}
+//
+//// Sample faded value noise
+//template <typename... Args>
+//__device__ float __sample(Basis::FadedValue basis, Args &&...args)
+//{
+//    return fadedValue(args...);
+//}
+//
+//// Sample cubic value noise
+//template <typename... Args>
+//__device__ float __sample(Basis::CubicValue basis, Args &&...args)
+//{
+//    return cubicValue(args...);
+//}
+//
+//// Sample Worley noise
+//template <typename... Args>
+//__device__ float __sample(Basis::Worley basis, Args &&...args)
+//{
+//    return worleyNoise(args...);
+//}
 
-template <>
-__device__ float __sample<BasisSimplex>(Args&&... args)
-{
-    return simplexNoise(std::forward<Args>(args));
-}
-
-template <>
-__device__ float __sample<BasisSpots>(Args&&... args)
-{
-    return spots(std::forward<Args>(args));
-}
-
-template <>
-__device__ float __sample<BasisChecker>(Args&&... args)
-{
-    return checker(std::forward<Args>(args)...);
-}
-
-template <>
-__device__ float __sample<BasisDiscrete>(Args&&... args)
-{
-    return discreteNoise(std::forward<Args>(args)...);
-}
-
-template <>
-__device__ float __sample<BasisLinearValue>(Args&&... args)
-{
-    return linearValue(std::forward<Args>(args)...);
-}
-
-template <>
-__device__ float __sample<BasisFadedValue>(Args&&... args)
-{
-    return fadedValue(std::forward<Args>(args)...);
-}
-
-template <>
-__device__ float __sample<BasisCubicValue>(Args&&... args)
-{
-    return cubicValue(std::forward<Args>(args)...);
-}
-
-template <>
-__device__ float __sample<BasisWorley>(Args&&... args)
-{
-    return worleyNoise(std::forward<Args>(args)...);
-}
-
-template <typename Basis, typename ...Args>
-__device__ float noise(Args&&... args)
-{
-    return __sample<Basis>(std::forward<Args>(args));
-}
-
-template <class Basis>
-__device__ float fbm(float3 pos, float scale, int seed, int n, float lacunarity, float decay)
+template <typename B>
+__device__ float fbm(int n, float lacunarity, float decay, float3 pos, float scale, int seed)
 {
     float acc = 0.0f;
     float amp = 1.0f;
 
     for (int i = 0; i < n; i++)
         {
-            acc += __sample<Basis>(pos, scale, seed) * amp * 0.5f;
+            acc += __sample<B>(pos, scale, seed) * amp * 0.5f;
             scale *= lacunarity;
             amp *= decay;
             seed = seed ^ ((i + 198273) * 928374);
@@ -1468,45 +1218,21 @@ __device__ float fbm(float3 pos, float scale, int seed, int n, float lacunarity,
     return acc;
 }
 
-template <class Basis>
-__device__ float fbmAbs(float3 pos, float scale, int seed, int n, float lacunarity, float decay)
+template <typename B>
+__device__ float fbmAbs(int n, float lacunarity, float decay, float3 pos, float scale, int seed)
 {
     float acc = 0.0f;
     float amp = 1.0f;
 
     for (int i = 0; i < n; i++)
         {
-            acc += fabsf(__sample<Basis>(pos, scale, seed)) * amp * 0.5f;
+            acc += fabsf(__sample<B>(pos, scale, seed)) * amp * 0.5f;
             scale *= lacunarity;
             amp *= decay;
             seed = seed ^ ((i + 198273) * 928374);
         }
 
     return mapToSigned(acc);
-}
-
-template <class Basis>
-__device__ float recurrent(float3 pos, float scale, int seed, int n, float lacunarity, float decay, float turbulence)
-{
-    float acc = 0.0f;
-    float amp = 1.0f;
-
-    for(int i = 0; i < n; i++)
-        {
-            float4 pt = fastRandomFloat4(seed ^ ((i + 324981) * 12348));
-
-            acc += __sample<Basis>(pos, scale, seed) * amp * 0.5f;
-
-            pos.x += pt.x * acc * turbulence * amp;
-            pos.y += pt.y * acc * turbulence * amp;
-            pos.z += pt.z * acc * turbulence * amp;
-
-            scale *= lacunarity * (pt.w + 0.5f);
-            amp *= decay;
-            seed = seed ^ ((i + 198273) * 928374);
-        }
-
-    return acc;
 }
 
 } // namespace cudaNoise
