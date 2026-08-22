@@ -1,3 +1,5 @@
+
+
 # cudaNoise
 
 *Library of common noise functions for CUDA kernels*
@@ -10,7 +12,7 @@ the input vector for other noise functions for turbulence effects.
 
 ![montage](https://user-images.githubusercontent.com/6199226/202872480-512ab0ef-7210-4eff-8c3c-8179701e1f1e.jpg "Basis functions")
 
-*Basis functions include: discrete noise, tricubic value noise, perlin gradient noise, simplex noise, spots and worley noise.*
+*Basis functions include: discrete noise, cubic value noise, perlin gradient noise, simplex noise, spots and worley noise.*
 
 ## Derived functions
 
